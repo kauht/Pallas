@@ -30,6 +30,7 @@ Thumbs.db
 *.tmp
 *.temp
 *.log
+.cache/
 
 # Test outputs
 test-results/
