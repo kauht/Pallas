@@ -1,55 +1,37 @@
-# Prerequisites
-*.d
-
-# Object files
+```
+# Build artifacts
 *.o
-*.ko
 *.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
 *.exe
 *.out
-*.app
-*.i*86
-*.x86_64
-*.hex
+*.a
+*.so
+*.dll
+*.dylib
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Build directories
+build/
+bin/
+obj/
+out/
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# debug information files
-*.dwo
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# Test outputs
+test-results/
+coverage/
+tests/writing-a-c-compiler-tests/
