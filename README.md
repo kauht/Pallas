@@ -11,13 +11,13 @@ Pallas is a completely original language with syntax and language features inspi
 
 ## Documentation
 
-- [docs/DESIGN.md](docs/DESIGN.md) - Language design and syntax
-- [docs/IMPLEMENTATION.md](docs/IMPLEMENTATION.md) - Compiler Architecture Implementation
+- [docs/DESIGN.md](docs/project/DESIGN.md) - Language design and syntax
+- [docs/IMPLEMENTATION.md](docs/project/IMPLEMENTATION.md) - Compiler Architecture Implementation
 
 ### Project Management
-- [docs/PROJECT.md](./docs/PROJECT.md) - Roadmap and Tasks
-- [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) - How to contribute
-- [docs/CODE_STYLE.md](docs/CODE_STYLE.md)
+- [docs/PROJECT.md](./docs/project/PROJECT.md) - Roadmap and Tasks
+- [docs/CONTRIBUTING.md](./docs/project/CONTRIBUTING.md) - How to contribute
+- [docs/CODE_STYLE.md](docs/project/CODE_STYLE.md)
 
 ## Language Features
 
@@ -28,7 +28,5 @@ Pallas is a completely original language with syntax and language features inspi
 - Variadic functions & easy accessing
 - Modules: `import std.io;` (no preprocessor)
 - Good driver
-
-Take a look at [docs/DESIGN.md](docs/DESIGN.md) to view full specs.
 
 ---
