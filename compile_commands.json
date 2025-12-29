@@ -1,0 +1,22 @@
+[
+ {
+  "directory": "/home/sam/pallas",
+  "arguments": [
+   "gcc",
+   "-g",
+   "-Wall",
+   "-Wextra",
+   "-I./include",
+   "-I../include",
+   "./src/main.c",
+   "./src/semantic/semantic.c",
+   "./src/ir/ir.c",
+   "./src/errors.c",
+   "./src/parse/parser.c",
+   "./src/lex/lexer.c",
+   "-o",
+   "./build/pallas"
+  ],
+  "file": "./src/lex/lexer.c"
+ }
+]

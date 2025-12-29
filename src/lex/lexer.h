@@ -103,6 +103,8 @@ typedef struct {
     size_t pos;
     size_t line;
     size_t column;
+
+    //ErrorList* s;
 } Lexer;
 
 Lexer* init_lexer(const char* src);

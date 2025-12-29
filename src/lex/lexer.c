@@ -130,23 +130,37 @@ static void skip_untracked(Lexer* lx) {
 // Type-specific
 static Token lex_identifier(Lexer* lx) {
     size_t start = lx->pos;
-    while (isalpha(lx->src[lx->pos]) || lx->src[lx->pos] == '_') {
-        next_char(lx);
+    if (isalpha(lx->src[lx->pos]) || lx->src[lx->pos] == '_') {
+        while (is_alpha_numeric(lx->src[lx->pos])) {
+            next_char(lx);
+        }
     }
     size_t len = lx->pos - start;
 
-    const char* s = (char*)malloc(sizeof(len));
-    // memcpy(start, s, len);
+    char* s = (char*)malloc(len + 1);
+    memcpy(s, lx->src+start, len);
+    s[len] = '\0';
 
-    // If matches with keyword list, return respective token type, else return as
-    // TOKEN_IDENT
+    TokenType tt = is_keyword(s);
+    if (tt == TOKEN_IDENT) {
+        return make_token(lx, tt, start, strlen(s), s);
+    }
+
+    Token t = make_token(lx, tt, start, strlen(s), NULL);
+    free(s);
+    return t;
 }
 static Token lex_number(Lexer* lx) {
     size_t start = lx->pos;
     int dec = 0;
     while (isdigit(lx->src[lx->pos])) {
-        if (!dec) {
+        if (lx->src[lx->pos] == '.') {
+            if (dec) {
+                //push_error();
+            }
+            dec = 1;
         }
+        next_char(lx);
     }
     // const char* literal = (char*)malloc();
     // return make_token(lx, TOKEN_FLOAT, start, , char* literal);
