@@ -1,0 +1,10 @@
+BasedOnStyle: Google
+IndentWidth: 4
+UseTab: Never
+PointerAlignment: Left
+ColumnLimit: 100
+AllowShortFunctionsOnASingleLine: None
+BreakBeforeBraces: Attach
+DerivePointerBinding: false
+AlignAfterOpenBracket: true
+AlignTrailingComments: true
