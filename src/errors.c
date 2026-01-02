@@ -37,7 +37,8 @@ ErrorList* push_error(ErrorList* error_list, const char* message, Severity sever
 }
 
 void free_errors(ErrorList* error_list) {
-    if (!error_list) return;
+    if (!error_list)
+        return;
     for (size_t i = 0; i < error_list->size; i++) {
         free((void*)error_list->errors[i].message);
     }

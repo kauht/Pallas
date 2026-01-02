@@ -5,6 +5,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "errors.h"
+
+static ErrorList* error_list;
+
 static const struct {
     const char* name;
     TokenType type;
@@ -25,10 +29,10 @@ static const struct {
     {"null", TOKEN_NULL},
 
     /* Types */
-    {"int", TOKEN_INT},
-    {"float", TOKEN_FLOAT},
-    {"char", TOKEN_CHAR},
-    {"string", TOKEN_STRING},
+    {"int", TOKEN_INT_LITERAL},
+    {"float", TOKEN_FLOAT_LITERAL},
+    {"char", TOKEN_CHAR_LITERAL},
+    {"string", TOKEN_STRING_LITERAL},
 
     /* Sized Types */
     {"i32", TOKEN_I32},
@@ -80,13 +84,12 @@ static int is_alpha_numeric(char c) {
     return 0;
 }
 
-static Token make_token(Lexer* lx, TokenType type, size_t start, size_t length, char* literal) {
+static Token make_token(Lexer* lx, TokenType type, size_t start, size_t length, char* lexeme) {
     Token tk;
+    tk.lexeme = lexeme;
     tk.type = type;
     tk.start = start;
     tk.length = length;
-    tk.lexeme = lx->src + start;
-    tk.literal = literal;
     tk.line = lx->line;
     tk.column = lx->column - (lx->pos - start);
     return tk;
@@ -96,13 +99,13 @@ static void skip_untracked(Lexer* lx) {
     while (lx->pos < lx->length) {
         char c = peek_char(lx);
 
-        // White space
+        /* White space */
         if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
             next_char(lx);
             continue;
         }
 
-        // Single-line comment
+        /* Single-line comment */
         if (c == '/' && peek_next_char(lx) == '/') {
             while (peek_char(lx) != '\n' && peek_char(lx) != '\0') {
                 next_char(lx);
@@ -110,7 +113,7 @@ static void skip_untracked(Lexer* lx) {
             continue;
         }
 
-        // Multi-line comment
+        /* Multi-line comment */
         if (c == '/' && peek_next_char(lx) == '*') {
             next_char(lx);
             next_char(lx);
@@ -130,50 +133,258 @@ static void skip_untracked(Lexer* lx) {
 // Type-specific
 static Token lex_identifier(Lexer* lx) {
     size_t start = lx->pos;
-    if (isalpha(lx->src[lx->pos]) || lx->src[lx->pos] == '_') {
-        while (is_alpha_numeric(lx->src[lx->pos])) {
-            next_char(lx);
-        }
+    while (is_alpha_numeric(lx->src[lx->pos])) {
+        next_char(lx);
     }
     size_t len = lx->pos - start;
 
     char* s = (char*)malloc(len + 1);
-    memcpy(s, lx->src+start, len);
+    memcpy(s, lx->src + start, len);
     s[len] = '\0';
 
     TokenType tt = is_keyword(s);
-    if (tt == TOKEN_IDENT) {
-        return make_token(lx, tt, start, strlen(s), s);
-    }
 
-    Token t = make_token(lx, tt, start, strlen(s), NULL);
-    free(s);
+    Token t = make_token(lx, tt, start, len, s);
     return t;
 }
 static Token lex_number(Lexer* lx) {
     size_t start = lx->pos;
-    int dec = 0;
-    while (isdigit(lx->src[lx->pos])) {
-        if (lx->src[lx->pos] == '.') {
-            if (dec) {
-                //push_error();
+    int is_float = 0;
+    while (lx->pos < lx->length) {
+        char c = peek_char(lx);
+        if (isdigit(c)) {
+            next_char(lx);
+        } else if (c == '.') {
+            if (is_float) {
+                push_error(error_list, "Too many decimal points in number", ERROR, lx->line,
+                           lx->column, LEXER);
+                break;
             }
-            dec = 1;
+            if (isdigit(peek_next_char(lx))) {
+                is_float = 1;
+                next_char(lx);
+            } else {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+    size_t length = lx->pos - start;
+    char* lexeme = (char*)malloc(length + 1);
+    memcpy(lexeme, lx->src + start, length);
+    lexeme[length] = '\0';
+
+    TokenType type;
+    if (is_float) {
+        type = TOKEN_FLOAT_LITERAL;
+    } else {
+        type = TOKEN_INT_LITERAL;
+    }
+    return make_token(lx, type, start, length, lexeme);
+}
+static Token lex_string(Lexer* lx) {
+    next_char(lx);  // Skip '"'
+    size_t start = lx->pos;
+    while (lx->pos < lx->length) {
+        char c = peek_char(lx);
+        if (c == '"') {
+            next_char(lx);
+            break;
         }
         next_char(lx);
     }
-    // const char* literal = (char*)malloc();
-    // return make_token(lx, TOKEN_FLOAT, start, , char* literal);
-    //  Check if float/int type
-}
-static Token lex_string(Lexer* lx) {
+    if (lx->pos >= lx->length) {
+        push_error(error_list, "Unterminated string literal", ERROR, lx->line, lx->column, LEXER);
+    }
+    size_t length = lx->pos - start;
+    char* lexeme = (char*)malloc(length + 1);
+    memcpy(lexeme, lx->src + start, length);
+    lexeme[length] = '\0';
+
+    return make_token(lx, TOKEN_STRING_LITERAL, start, length, lexeme);
 }
 static Token lex_operator(Lexer* lx) {
+    size_t start = lx->pos;
+    char c = next_char(lx);
+
+    char* lexeme = (char*)malloc(4);
+    lexeme[0] = c;
+    lexeme[1] = '\0';
+    size_t length = 1;
+
+    switch (c) {
+        case '(':
+            return make_token(lx, TOKEN_LPAREN, start, length, lexeme);
+        case ')':
+            return make_token(lx, TOKEN_RPAREN, start, length, lexeme);
+        case '{':
+            return make_token(lx, TOKEN_LBRACE, start, length, lexeme);
+        case '}':
+            return make_token(lx, TOKEN_RBRACE, start, length, lexeme);
+        case '[':
+            return make_token(lx, TOKEN_LBRACKET, start, length, lexeme);
+        case ']':
+            return make_token(lx, TOKEN_RBRACKET, start, length, lexeme);
+        case ';':
+            return make_token(lx, TOKEN_SEMICOLON, start, length, lexeme);
+        case ',':
+            return make_token(lx, TOKEN_COMMA, start, length, lexeme);
+        case ':':
+            return make_token(lx, TOKEN_COLON, start, length, lexeme);
+        case '?':
+            return make_token(lx, TOKEN_QUESTION, start, length, lexeme);
+        case '@':
+            return make_token(lx, TOKEN_AT, start, length, lexeme);
+        case '~':
+            return make_token(lx, TOKEN_TILDE, start, length, lexeme);
+        case '^':
+            return make_token(lx, TOKEN_CARET, start, length, lexeme);
+        case '.': {
+            if ((peek_char(lx) == '.') && (peek_next_char(lx) == '.')) {
+                next_char(lx);
+                next_char(lx);
+                lexeme[1] = '.';
+                lexeme[2] = '.';
+                lexeme[3] = '\0';
+                length = 3;
+                return make_token(lx, TOKEN_ELLIPSIS, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_DOT, start, length, lexeme);
+        }
+        case '+': {
+            if (match_char(lx, '+')) {
+                lexeme[1] = '+';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_PLUS_PLUS, start, length, lexeme);
+            }
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_PLUS_ASSIGN, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_PLUS, start, length, lexeme);
+        }
+        case '-': {
+            if (match_char(lx, '-')) {
+                lexeme[1] = '-';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_MINUS_MINUS, start, length, lexeme);
+            }
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_MINUS_ASSIGN, start, length, lexeme);
+            }
+            if (match_char(lx, '>')) {
+                lexeme[1] = '>';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_ARROW, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_MINUS, start, length, lexeme);
+        }
+        case '*': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_STAR_ASSIGN, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_STAR, start, length, lexeme);
+        }
+        case '/': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_SLASH_ASSIGN, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_SLASH, start, length, lexeme);
+        }
+        case '%': {
+            return make_token(lx, TOKEN_PERCENT, start, length, lexeme);
+        }
+        case '=': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_EQUAL, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_ASSIGN, start, length, lexeme);
+        }
+        case '!': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_NOT_EQUAL, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_LOGICAL_NOT, start, length, lexeme);
+        }
+        case '<': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_LESS_EQUAL, start, length, lexeme);
+            }
+            if (match_char(lx, '<')) {
+                lexeme[1] = '<';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_LEFT_SHIFT, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_LESS, start, length, lexeme);
+        }
+        case '>': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_GREATER_EQUAL, start, length, lexeme);
+            }
+            if (match_char(lx, '>')) {
+                lexeme[1] = '>';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_RIGHT_SHIFT, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_GREATER, start, length, lexeme);
+        }
+        case '&': {
+            if (match_char(lx, '&')) {
+                lexeme[1] = '&';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_LOGICAL_AND, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_AMPERSAND, start, length, lexeme);
+        }
+        case '|': {
+            if (match_char(lx, '|')) {
+                lexeme[1] = '|';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_LOGICAL_OR, start, length, lexeme);
+            }
+            return make_token(lx, TOKEN_PIPE, start, length, lexeme);
+        }
+        default:
+            return make_token(lx, TOKEN_ERROR, start, length, lexeme);
+    }
 }
 
-Lexer* init_lexer(const char* src) {
+Lexer* init_lexer(const char* src, ErrorList* el) {
+    error_list = el;
     Lexer* lx = (Lexer*)malloc(sizeof(Lexer));
-    if (!lx) return NULL;
+    if (!lx)
+        return NULL;
     lx->src = src;
     lx->length = strlen(src);
     lx->pos = 0;
@@ -202,29 +413,48 @@ Token next_token(Lexer* lx) {
     skip_untracked(lx);
 
     if (lx->pos >= lx->length) {
-        // make token EOF
+        return make_token(lx, TOKEN_EOF, lx->pos, 0, NULL);
     }
 
-    while (lx->pos < lx->length) {
-        char c = lx->src[lx->pos];
+    char c = peek_char(lx);
 
-        // Number
-        if (isdigit(c)) {
-        }
-
-        // String
-        if (c == '"') {
-            next_char(lx);
-            while (lx->pos < lx->length) {
-                if (lx->src[lx->pos] == '"') {
-                }
-            }
-        }
-
-        break;
+    if (isdigit(c)) {
+        return lex_number(lx);
     }
+
+    if (isalpha(c) || c == '_') {
+        return lex_identifier(lx);
+    }
+
+    if (c == '"') {
+        return lex_string(lx);
+    }
+
+    return lex_operator(lx);
+}
+
+Token* run_lexer(Lexer* lx, size_t* count) {
+    size_t max = 16;
+    size_t n = 0;
+
+    Token* tokens = (Token*)malloc(sizeof(Token) * max);
+
+    for (;;) {
+        if (n >= max) {
+            max = max * 2;
+            tokens = (Token*)realloc(tokens, sizeof(Token) * max);
+        }
+        Token t = next_token(lx);
+        tokens[n++] = t;
+        if (t.type == TOKEN_EOF) {
+            break;
+        }
+    }
+    *count = n;
+    return tokens;
 }
 
 void free_token(Token* t) {
-    if (t->literal) free(t->literal);
+    if (t->lexeme)
+        free(t->lexeme);
 }

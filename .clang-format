@@ -8,3 +8,11 @@ BreakBeforeBraces: Attach
 DerivePointerBinding: false
 AlignAfterOpenBracket: true
 AlignTrailingComments: true
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Never
+AllowShortEnumsOnASingleLine: false
+BraceWrapping:
+    AfterControlStatement: Always
+    AfterFunction: true

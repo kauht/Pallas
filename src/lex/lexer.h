@@ -4,10 +4,12 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "errors.h"
+
 typedef enum {
     /* Special */
-    TOKEN_EOF,   /* End of file */
-    TOKEN_ERROR, /* Unexpected character */
+    TOKEN_EOF,
+    TOKEN_ERROR,
 
     /* Keywords */
     TOKEN_IMPORT,
@@ -25,10 +27,10 @@ typedef enum {
     TOKEN_NULL,
 
     /* Literals */
-    TOKEN_INT,
-    TOKEN_FLOAT,
-    TOKEN_CHAR,
-    TOKEN_STRING,
+    TOKEN_INT_LITERAL,
+    TOKEN_FLOAT_LITERAL,
+    TOKEN_CHAR_LITERAL,
+    TOKEN_STRING_LITERAL,
 
     /* Explicit Types */
     TOKEN_I32,
@@ -50,47 +52,55 @@ typedef enum {
     TOKEN_COLON,     /* : */
     TOKEN_DOT,       /* . */
     TOKEN_ELLIPSIS,  /* ... */
+    TOKEN_QUESTION,  /* ? */
+    TOKEN_AT,        /* @ */
 
-    /* Operators */
-    TOKEN_PLUS,        /* + */
-    TOKEN_MINUS,       /* - */
-    TOKEN_STAR,        /* * */
-    TOKEN_SLASH,       /* / */
-    TOKEN_PERCENT,     /* % */
-    TOKEN_PLUS_PLUS,   /* ++ */
-    TOKEN_MINUS_MINUS, /* -- */
+    /* Assignment / Arrow */
+    TOKEN_ASSIGN,      /* = */
+    TOKEN_ARROW,       /* -> */
+    TOKEN_PLUS_ASSIGN, /* += */
+    TOKEN_MINUS_ASSIGN,
+    TOKEN_STAR_ASSIGN,
+    TOKEN_SLASH_ASSIGN,
 
-    /* Comparisons */
-    TOKEN_EQUAL,         /* == */
-    TOKEN_NOT_EQUAL,     /* != */
-    TOKEN_LESS,          /* < */
-    TOKEN_LESS_EQUAL,    /* <= */
-    TOKEN_GREATER,       /* > */
-    TOKEN_GREATER_EQUAL, /* >= */
+    /* Arithmetic Operators */
+    TOKEN_PLUS,
+    TOKEN_MINUS,
+    TOKEN_STAR,
+    TOKEN_SLASH,
+    TOKEN_PERCENT,
+    TOKEN_PLUS_PLUS,
+    TOKEN_MINUS_MINUS,
 
-    /* Logical and Bitwise */
-    TOKEN_AND,         /* && */
-    TOKEN_OR,          /* || */
-    TOKEN_NOT,         /* ! */
-    TOKEN_BITWISE_AND, /* & */
-    TOKEN_BITWISE_OR,  /* | */
-    TOKEN_BITWISE_XOR, /* ^ */
-    TOKEN_BITWISE_NOT, /* ~ */
+    /* Comparison Operators */
+    TOKEN_EQUAL,
+    TOKEN_NOT_EQUAL,
+    TOKEN_LESS,
+    TOKEN_LESS_EQUAL,
+    TOKEN_GREATER,
+    TOKEN_GREATER_EQUAL,
+
+    /* Logical Operators */
+    TOKEN_LOGICAL_AND, /* && */
+    TOKEN_LOGICAL_OR,  /* || */
+    TOKEN_LOGICAL_NOT, /* ! */
+
+    /* Other Single-character Symbols */
+    TOKEN_AMPERSAND,   /* & */
+    TOKEN_PIPE,        /* | */
+    TOKEN_CARET,       /* ^ */
+    TOKEN_TILDE,       /* ~ */
     TOKEN_LEFT_SHIFT,  /* << */
     TOKEN_RIGHT_SHIFT, /* >> */
 
-    /* Misc */
-    TOKEN_QUESTION, /* ? */
-    TOKEN_ASSIGN,   /* = */
-    TOKEN_ARROW,    /* -> */
-    TOKEN_IDENT,
+    /* Identifiers */
+    TOKEN_IDENT
 } TokenType;
 
 typedef struct {
-    const char* lexeme;
+    char* lexeme;
     size_t start;
     size_t length;
-    char* literal;
     size_t line;
     size_t column;
     TokenType type;
@@ -104,10 +114,11 @@ typedef struct {
     size_t line;
     size_t column;
 
-    //ErrorList* s;
+    // ErrorList* s;
 } Lexer;
 
-Lexer* init_lexer(const char* src);
+Lexer* init_lexer(const char* src, ErrorList* el);
+Token* run_lexer(Lexer* lx, size_t* count);
 void free_lexer(Lexer* lx);
 
 char next_char(Lexer* lx);   /* Consume and return the next char from the input

@@ -31,8 +31,3 @@ Thumbs.db
 *.temp
 *.log
 .cache/
-
-# Test outputs
-test-results/
-coverage/
-tests/writing-a-c-compiler-tests/

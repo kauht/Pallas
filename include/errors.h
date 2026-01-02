@@ -3,9 +3,20 @@
 
 #include <stddef.h>
 
-typedef enum { Lexer, Parser, Semantic, Codegen, Generic } Category;
+typedef enum {
+    LEXER,
+    PARSER,
+    SEMANTIC,
+    CODEGEN,
+    GENERIC
+} Category;
 
-typedef enum { INFO = 1, WARNING, ERROR, CRITICAL } Severity;
+typedef enum {
+    INFO = 1,
+    WARNING,
+    ERROR,
+    CRITICAL
+} Severity;
 
 typedef struct {
     const char* message;
