@@ -25,6 +25,7 @@ typedef enum {
     TOKEN_TRUE,
     TOKEN_FALSE,
     TOKEN_NULL,
+    TOKEN_CONST,
 
     /* Literals */
     TOKEN_INT_LITERAL,
@@ -32,13 +33,17 @@ typedef enum {
     TOKEN_CHAR_LITERAL,
     TOKEN_STRING_LITERAL,
 
-    /* Explicit Types */
+    /* Types */
     TOKEN_I32,
     TOKEN_I64,
     TOKEN_U32,
     TOKEN_U64,
     TOKEN_F32,
     TOKEN_F64,
+    TOKEN_INT,
+    TOKEN_FLOAT,
+    TOKEN_CHAR,
+    TOKEN_STRING,
 
     /* Punctuation */
     TOKEN_LPAREN,    /* ( */
@@ -85,13 +90,18 @@ typedef enum {
     TOKEN_LOGICAL_OR,  /* || */
     TOKEN_LOGICAL_NOT, /* ! */
 
-    /* Other Single-character Symbols */
-    TOKEN_AMPERSAND,   /* & */
-    TOKEN_PIPE,        /* | */
-    TOKEN_CARET,       /* ^ */
-    TOKEN_TILDE,       /* ~ */
-    TOKEN_LEFT_SHIFT,  /* << */
-    TOKEN_RIGHT_SHIFT, /* >> */
+    /* Other */
+    TOKEN_AMPERSAND,     /* & */
+    TOKEN_PIPE,          /* | */
+    TOKEN_CARET,         /* ^ */
+    TOKEN_TILDE,         /* ~ */
+    TOKEN_LEFT_SHIFT,    /* << */
+    TOKEN_RIGHT_SHIFT,   /* >> */
+    TOKEN_AND_EQUALS,    /* &= */
+    TOKEN_OR_EQUALS,     /* |= */
+    TOKEN_XOR_EQUALS,    /* ^= */
+    TOKEN_LSHIFT_EQUALS, /* <<= */
+    TOKEN_RSHIFT_EQUALS, /* >>= */
 
     /* Identifiers */
     TOKEN_IDENT

@@ -63,7 +63,6 @@ Just like in C, you're responsible for managing memory:
 ### Variables
 ```c
 a: i32 = 1;
-let a: i32 = 1; // Let keyword being optional(may remove)
 const b: i32 = 0; // Constant variables
 ```
 
@@ -89,7 +88,7 @@ while (cond) {
 }
 
 // Ranged for???? UNSURE
-for (let i in 0..10) {
+for (i: i32 in 0..10) {
     println("{}", i);
 }
 // Or just

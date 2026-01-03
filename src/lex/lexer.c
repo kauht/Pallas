@@ -27,14 +27,13 @@ static const struct {
     {"true", TOKEN_TRUE},
     {"false", TOKEN_FALSE},
     {"null", TOKEN_NULL},
+    {"const", TOKEN_CONST},
 
     /* Types */
-    {"int", TOKEN_INT_LITERAL},
-    {"float", TOKEN_FLOAT_LITERAL},
-    {"char", TOKEN_CHAR_LITERAL},
-    {"string", TOKEN_STRING_LITERAL},
-
-    /* Sized Types */
+    {"int", TOKEN_INT},
+    {"float", TOKEN_FLOAT},
+    {"char", TOKEN_CHAR},
+    {"string", TOKEN_STRING},
     {"i32", TOKEN_I32},
     {"i64", TOKEN_I64},
     {"u32", TOKEN_U32},
@@ -183,32 +182,62 @@ static Token lex_number(Lexer* lx) {
     }
     return make_token(lx, type, start, length, lexeme);
 }
-static Token lex_string(Lexer* lx) {
-    next_char(lx);  // Skip '"'
+
+static Token lex_char(Lexer* lx) {
+    next_char(lx);
+    char* lexeme = malloc(4);
     size_t start = lx->pos;
     while (lx->pos < lx->length) {
         char c = peek_char(lx);
-        if (c == '"') {
+        if (c == '\'') {  // Empty
             next_char(lx);
             break;
         }
+        if (c == '\\') {  // escaped
+            next_char(lx);
+            if (peek_next_char(lx) != '\'') {
+                push_error(error_list, "Character literal error", ERROR, lx->line, lx->column,
+                           LEXER);
+                next_char(lx);
+                next_char(lx);
+                break;
+            }
+        }
+        if (peek_char(lx) == '\'') {  // Regular
+            next_char(lx);
+        }
+    }
+    return make_token(lx, TOKEN_CHAR_LITERAL, start, lx->pos - start, lexeme);
+}
+static Token lex_string(Lexer* lx) {
+    next_char(lx);  // Skip '"'
+    size_t start = lx->pos;
+    while (lx->pos < lx->length && peek_char(lx) != '"') {
+        if (peek_char(lx) == '\\') {
+            next_char(lx);
+            next_char(lx);
+        } else {
+            next_char(lx);
+        }
+    }
+    if (peek_char(lx) == '"') {
+        size_t end = lx->pos;
         next_char(lx);
-    }
-    if (lx->pos >= lx->length) {
+        size_t length = end - start;
+        char* lexeme = malloc(length + 1);
+        memcpy(lexeme, lx->src + start, length);
+        lexeme[length] = '\0';
+        return make_token(lx, TOKEN_STRING_LITERAL, start, length + 2, lexeme);
+    } else {
         push_error(error_list, "Unterminated string literal", ERROR, lx->line, lx->column, LEXER);
+        return make_token(lx, TOKEN_ERROR, start, lx->pos - start, NULL);
     }
-    size_t length = lx->pos - start;
-    char* lexeme = (char*)malloc(length + 1);
-    memcpy(lexeme, lx->src + start, length);
-    lexeme[length] = '\0';
-
-    return make_token(lx, TOKEN_STRING_LITERAL, start, length, lexeme);
 }
 static Token lex_operator(Lexer* lx) {
     size_t start = lx->pos;
     char c = next_char(lx);
 
-    char* lexeme = (char*)malloc(4);
+    char* lexeme = (char*)malloc(4);  // max size + '\0'
     lexeme[0] = c;
     lexeme[1] = '\0';
     size_t length = 1;
@@ -238,8 +267,15 @@ static Token lex_operator(Lexer* lx) {
             return make_token(lx, TOKEN_AT, start, length, lexeme);
         case '~':
             return make_token(lx, TOKEN_TILDE, start, length, lexeme);
-        case '^':
+        case '^': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_XOR_EQUALS, start, length, lexeme);
+            }
             return make_token(lx, TOKEN_CARET, start, length, lexeme);
+        }
         case '.': {
             if ((peek_char(lx) == '.') && (peek_next_char(lx) == '.')) {
                 next_char(lx);
@@ -335,6 +371,13 @@ static Token lex_operator(Lexer* lx) {
                 return make_token(lx, TOKEN_LESS_EQUAL, start, length, lexeme);
             }
             if (match_char(lx, '<')) {
+                if (match_char(lx, '=')) {
+                    lexeme[1] = '<';
+                    lexeme[2] = '=';
+                    lexeme[3] = '\0';
+                    length = 3;
+                    return make_token(lx, TOKEN_LSHIFT_EQUALS, start, length, lexeme);
+                }
                 lexeme[1] = '<';
                 lexeme[2] = '\0';
                 length = 2;
@@ -350,6 +393,13 @@ static Token lex_operator(Lexer* lx) {
                 return make_token(lx, TOKEN_GREATER_EQUAL, start, length, lexeme);
             }
             if (match_char(lx, '>')) {
+                if (match_char(lx, '=')) {
+                    lexeme[1] = '>';
+                    lexeme[2] = '=';
+                    lexeme[3] = '\0';
+                    length = 3;
+                    return make_token(lx, TOKEN_RSHIFT_EQUALS, start, length, lexeme);
+                }
                 lexeme[1] = '>';
                 lexeme[2] = '\0';
                 length = 2;
@@ -358,6 +408,12 @@ static Token lex_operator(Lexer* lx) {
             return make_token(lx, TOKEN_GREATER, start, length, lexeme);
         }
         case '&': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_AND_EQUALS, start, length, lexeme);
+            }
             if (match_char(lx, '&')) {
                 lexeme[1] = '&';
                 lexeme[2] = '\0';
@@ -367,6 +423,12 @@ static Token lex_operator(Lexer* lx) {
             return make_token(lx, TOKEN_AMPERSAND, start, length, lexeme);
         }
         case '|': {
+            if (match_char(lx, '=')) {
+                lexeme[1] = '=';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_OR_EQUALS, start, length, lexeme);
+            }
             if (match_char(lx, '|')) {
                 lexeme[1] = '|';
                 lexeme[2] = '\0';
@@ -429,6 +491,9 @@ Token next_token(Lexer* lx) {
     if (c == '"') {
         return lex_string(lx);
     }
+    if (c == '\'') {
+        return lex_char(lx);
+    }
 
     return lex_operator(lx);
 }
@@ -436,7 +501,6 @@ Token next_token(Lexer* lx) {
 Token* run_lexer(Lexer* lx, size_t* count) {
     size_t max = 16;
     size_t n = 0;
-
     Token* tokens = (Token*)malloc(sizeof(Token) * max);
 
     for (;;) {
