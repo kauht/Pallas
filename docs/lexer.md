@@ -20,8 +20,6 @@ The lexer outputs tokens in order, each token should include:
 ## Ownership
 - The lexer doesn't own the source
 - Every token `lexeme` is a pointer to the original source buffer using start and length
-- Literal tokens like int, float, string, etc. own their literal value(heap allocated) stored in `literal`
-- Non literal tokens don't allocate any memory
 
 ---
 

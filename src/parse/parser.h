@@ -1,47 +1,54 @@
 #ifndef PARSER_H
 #define PARSER_H
-
-#include <stddef.h>
-#include <stdint.h>
-
 #include "../lex/lexer.h"
-
-typedef enum {
-    AST_UNKNOWN = 0,
-    AST_PROGRAM,
-    AST_FUNCTION,
-    AST_VARIABLE,
-    AST_BLOCK,
-    AST_EXPR_STMT,
-    AST_RETURN,
-    AST_IF,
-    AST_FOR,
-    AST_WHILE,
-    AST_BREAK,
-    AST_CONTINUE,
-    AST_EXPR,
-    AST_LITERAL,
-    AST_IDENT,
-} ASTNodeType;
-
-typedef struct ASTNode {
-    ASTNodeType type;
-    size_t start;
-    size_t length;
-    size_t line;
-    size_t column;
-
-    struct ASTNode* first;
-    struct ASTNode* next;
-    void* payload;
-} ASTNode;
+#include "ast.h"
+#include "errors.h"
+#include <stdbool.h>
 
 typedef struct Parser {
-    Lexer* lexer;
-    Token current;
-    Token lookahead;
-    char* error_message;
-    int panic;
+    Token* tokens;
+    uint32_t current;
+    uint32_t count;
+
+    ErrorList* errors;
+    bool panic;
 } Parser;
+
+typedef enum {
+    TYPE_VOID,
+    TYPE_INT,
+    TYPE_FLOAT,
+    TYPE_DOUBLE,
+    TYPE_CHAR,
+    TYPE_BOOL,
+
+    /* Explicitly Sized Types */
+    TYPE_I8, TYPE_I16, TYPE_I32, TYPE_I64,
+    TYPE_U8, TYPE_U16, TYPE_U32, TYPE_U64,
+    TYPE_F32, TYPE_F64,
+
+    /* Other */
+    TYPE_POINTER,
+    TYPE_ARRAY,
+    TYPE_USER,
+    TYPE_STRUCT,
+    TYPE_CLASS
+} TypeKind;
+
+typedef struct Type {
+    TypeKind kind;
+    struct Type* base;
+    uint32_t arr_size;
+    char* name;
+    struct Type* return_type;
+    struct Type** param_types;
+    uint32_t param_count;
+} Type;
+
+Parser* init_parser(Token* tks, uint32_t count, ErrorList* error_list);
+
+ASTNode* run_parser(Parser* parser);
+
+ASTNode* create_ast_node(ASTNode* left, ASTNode* right);
 
 #endif /* PARSER_H */

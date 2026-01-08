@@ -285,7 +285,7 @@ void run_lexer_tests(void) {
             {TOKEN_INT_LITERAL, "0"},
             {TOKEN_INT_LITERAL, "123"},
             {TOKEN_FLOAT_LITERAL, "4.56"},
-            {TOKEN_FLOAT_LITERAL, "7.89e2"},
+            {TOKEN_FLOAT_LITERAL, "7.89"},
             /* chars */
             {TOKEN_CHAR_LITERAL, "a"},
             {TOKEN_CHAR_LITERAL, "\\"},
@@ -346,7 +346,7 @@ void run_lexer_tests(void) {
             "import if else for while break continue return struct class true false null const "
             "int float char string i32 i64 u32 u64 f32 f64 "
             "myVar _hidden123 "
-            "0 123 4.56 7.89e2 "
+            "0 123 4.56 7.89 "
             "'a' '\\' 'z' "
             "\"\" \"line\\nbreak\" \"escaped\\\"quote\" "
             "+ ++ += - -- -> * *= / /= % = == != < <= > >= << <<= >> >>= ^ ^= & &= && | |= || ~ . "

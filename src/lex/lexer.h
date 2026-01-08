@@ -131,9 +131,8 @@ Lexer* init_lexer(const char* src, ErrorList* el);
 Token* run_lexer(Lexer* lx, size_t* count);
 void free_lexer(Lexer* lx);
 
-char next_char(Lexer* lx);   /* Consume and return the next char from the input
-                                (ignoring   whitespace/comments). */
-Token next_token(Lexer* lx); /* Consume input and return the next token */
+static char next_char(Lexer* lx);
+static Token next_token(Lexer* lx);
 
 void free_token(Token* t);
 

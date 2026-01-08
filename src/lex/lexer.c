@@ -197,7 +197,8 @@ static Token lex_char(Lexer* lx) {
     if (peek_char(lx) == '\'') {
         next_char(lx);
     } else {
-        push_error(error_list, "Unterminated character literal", ERROR, lx->line, lx->column, LEXER);
+        push_error(error_list, "Unterminated character literal", ERROR, lx->line, lx->column,
+                   LEXER);
     }
 
     size_t length = lx->pos - start;
@@ -460,7 +461,7 @@ void free_lexer(Lexer* lx) {
     free(lx);
 }
 
-char next_char(Lexer* lx) {
+static char next_char(Lexer* lx) {
     char c = lx->src[lx->pos];
     lx->pos++;
     if (c == '\n') {
@@ -472,7 +473,7 @@ char next_char(Lexer* lx) {
     return c;
 }
 
-Token next_token(Lexer* lx) {
+static Token next_token(Lexer* lx) {
     skip_untracked(lx);
 
     if (lx->pos >= lx->length) {

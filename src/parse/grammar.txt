@@ -1,0 +1,63 @@
+CFG Syntax:
+    - G = (V, Σ, R, S)
+    - V = nonterminals (Expression, Statement, Type, Function)
+    - Σ = terminals (IDENTIFIER, IF, PLUS, {, }, NUMBER)
+    - R = rules (ways to expand a structure)
+    - S = start (`Program`)
+    - -> = "is defined as"
+    - | = OR
+    - ? = optional
+    - * = zero or more
+
+Examples:
+    - `Program -> Decl*` means "Program is defined as zero or more Declarations"
+    - `Decl -> FunDecl | VarDecl` means "Declaration is defined as either a Function Declaration or a Variable Declaration"
+    - `FunDecl -> 'fn' IDENT '(' ParamList? ')' Block` means "A Function Declaration is defined as "fn name (optionalParams) {}""
+
+
+# Program Structure
+Program     -> Import* TopDecl*
+TopDecl     -> FunDecl | StructDecl | ClassDecl | VarDecl
+Import      -> 'import' IDENT ('.' IDENT)* ';'
+
+# Types
+Type        -> BuiltinType | UserType | PointerType
+BuiltinType -> 'int' | 'float' | 'double' | 'char' | 'bool' | SizedType
+SizedType   -> 'i8' | 'i16' | 'i32' | 'i64' | 'u8' | 'u16' | 'u32' | 'u64' | 'f32' | 'f64'
+UserType    -> TOKEN_IDENT
+PointerType -> Type '*'
+
+# Declarations
+FunDecl     -> TOKEN_IDENT TOKEN_LPAREN PARAMS* TOKEN_RPAREN ':' Type Block
+VarDecl     -> TOKEN_IDENT ':' Type ('=' Expression)? ';'
+StructDecl  -> 'struct' IDENT TOKEN_LBRACE StructMem* TOKEN_RBRACE
+ClassDecl   -> 'class' IDENT TOKEN_LBRACE ClassMem* TOKEN_RBRACE
+StructMem   -> idfk
+ClassMem    ->
+
+# Statements
+Statement   -> IfStmt | WhileStmt | ForStmt | ReturnStmt | Block
+IfStmt      -> 'if' TOKEN_LPAREN Expression TOKEN_RPAREN Block (else 'block')?        else if?
+WhileStmt   -> 'while' TOKEN_LPAREN Expression* TOKEN_RPAREN Block
+ForStmt     -> 'for' TOKEN_LPAREN (VarDecl | ExpressionStmt)? TOKEN_SEMICOLON Expression? TOKEN_SEMICOLON Expression? TOKEN_RPAREN Block
+ReturnStmt  -> 'return' IDENT ';'
+Block       -> '{' (VarDecl | Statement)* '}'
+
+# Expressions
+Expression  -> Assignment
+Assignment  -> LogicalOr ( TOKEN_ASSIGN Assignment )?
+LogicalOr   -> LogicalAnd ( TOKEN_LOGICAL_OR LogicalAnd )*
+LogicalAnd  -> Equality ( TOKEN_LOGICAL_AND Equality )*
+Equality    -> Comparison ( ( TOKEN_EQUAL | TOKEN_NOT_EQUAL ) Comparison )*
+Comparison  -> Additive ( ( TOKEN_LESS | TOKEN_LESS_EQUAL | TOKEN_GREATER | TOKEN_GREATER_EQUAL ) Additive )*
+Additive    -> Multiplicative ( ( TOKEN_PLUS | TOKEN_MINUS ) Multiplicative )*
+Multiplicative  -> Unary ( ( TOKEN_STAR | TOKEN_SLASH | TOKEN_PERCENT) Unary)*
+Unary       -> ( TOKEN_LOGICAL_NOT | TOKEN_MINUS | TOKEN_PLUS_PLUS | TOKEN_MINUS_MINUS )? Primary
+Primary     -> TOKEN_IDENT | TOKEN_INT_LITERAL | TOKEN_FLOAT_LITERAL | TOKEN_CHAR_LITERAL | TOKEN_STRING_LITERAL | TOKEN_LPAREN Expression TOKEN_RPAREN
+
+# Extras
+variadics
+import `from ... as ...`
+method visibility
+memory constructs (new/free)
+etc.
