@@ -190,10 +190,40 @@ static Token lex_char(Lexer* lx) {
     size_t start = lx->pos;
     next_char(lx);
 
+    char ch = '\0';
+
     if (peek_char(lx) == '\\') {
         next_char(lx);
+        char next = peek_char(lx);
+        switch (next) {
+            case '\\':
+                ch = '\\';
+                break;
+            case '\'':
+                ch = '\'';
+                break;
+            case '"':
+                ch = '"';
+                break;
+            case 'n':
+                ch = '\n';
+                break;
+            case 't':
+                ch = '\t';
+                break;
+            case 'r':
+                ch = '\r';
+                break;
+            case '0':
+                ch = '\0';
+                break;
+            default:
+                ch = next;
+                break;
+        }
         next_char(lx);
-    } else if (peek_char(lx) != '\'') {
+    } else if (peek_char(lx) != '\'' && peek_char(lx) != '\0') {
+        ch = peek_char(lx);
         next_char(lx);
     }
 
@@ -205,9 +235,9 @@ static Token lex_char(Lexer* lx) {
     }
 
     size_t length = lx->pos - start;
-    char* lexeme = malloc(length + 1);
-    memcpy(lexeme, lx->src + start, length);
-    lexeme[length] = '\0';
+    char* lexeme = malloc(2);
+    lexeme[0] = ch;
+    lexeme[1] = '\0';
 
     return make_token(lx, TOKEN_CHAR_LITERAL, start, length, lexeme);
 }
@@ -216,25 +246,72 @@ static Token lex_string(Lexer* lx) {
     size_t start = lx->pos;
     next_char(lx);
 
+    size_t len = 0;
+    size_t pos = lx->pos;
+
+    while (pos < lx->length && lx->src[pos] != '"') {
+        if (lx->src[pos] == '\\') {
+            pos++;
+            if (pos < lx->length) {
+                len++;
+                pos++;
+            }
+        } else {
+            len++;
+            pos++;
+        }
+    }
+
+    char* buffer = malloc(len + 1);
+    size_t i = 0;
+
     while (lx->pos < lx->length && peek_char(lx) != '"') {
         if (peek_char(lx) == '\\') {
             next_char(lx);
             if (lx->pos < lx->length) {
+                char next = peek_char(lx);
+                switch (next) {
+                    case 'n':
+                        buffer[i++] = '\n';
+                        break;
+                    case 't':
+                        buffer[i++] = '\t';
+                        break;
+                    case 'r':
+                        buffer[i++] = '\r';
+                        break;
+                    case '0':
+                        buffer[i++] = '\0';
+                        break;
+                    case '\\':
+                        buffer[i++] = '\\';
+                        break;
+                    case '"':
+                        buffer[i++] = '"';
+                        break;
+                    case '\'':
+                        buffer[i++] = '\'';
+                        break;
+                    default:
+                        buffer[i++] = next;
+                        break;
+                }
                 next_char(lx);
             }
         } else {
+            buffer[i++] = peek_char(lx);
             next_char(lx);
         }
     }
 
     if (peek_char(lx) == '"') {
         next_char(lx);
+        buffer[i] = '\0';
+
         size_t length = lx->pos - start;
-        char* lexeme = malloc(length + 1);
-        memcpy(lexeme, lx->src + start, length);
-        lexeme[length] = '\0';
-        return make_token(lx, TOKEN_STRING_LITERAL, start, length, lexeme);
+        return make_token(lx, TOKEN_STRING_LITERAL, start, length, buffer);
     } else {
+        free(buffer);
         push_error(lx->errors, "Unterminated string literal", ERROR, lx->line, lx->column, LEXER);
         return make_token(lx, TOKEN_ERROR, start, lx->pos - start, NULL);
     }

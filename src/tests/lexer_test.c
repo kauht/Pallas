@@ -75,7 +75,7 @@ static const char* token_name(TokenType t) {
         case TOKEN_F64:
             return "TOKEN_F64";
 
-        /* Operators (common) */
+        /* Operators */
         case TOKEN_PLUS:
             return "TOKEN_PLUS";
         case TOKEN_PLUS_PLUS:
@@ -86,12 +86,20 @@ static const char* token_name(TokenType t) {
             return "TOKEN_MINUS";
         case TOKEN_MINUS_MINUS:
             return "TOKEN_MINUS_MINUS";
+        case TOKEN_MINUS_ASSIGN:
+            return "TOKEN_MINUS_ASSIGN";
         case TOKEN_ARROW:
             return "TOKEN_ARROW";
-        case TOKEN_LOGICAL_AND:
-            return "TOKEN_LOGICAL_AND";
-        case TOKEN_LOGICAL_OR:
-            return "TOKEN_LOGICAL_OR";
+        case TOKEN_STAR:
+            return "TOKEN_STAR";
+        case TOKEN_STAR_ASSIGN:
+            return "TOKEN_STAR_ASSIGN";
+        case TOKEN_SLASH:
+            return "TOKEN_SLASH";
+        case TOKEN_SLASH_ASSIGN:
+            return "TOKEN_SLASH_ASSIGN";
+        case TOKEN_PERCENT:
+            return "TOKEN_PERCENT";
         case TOKEN_ASSIGN:
             return "TOKEN_ASSIGN";
         case TOKEN_EQUAL:
@@ -114,16 +122,6 @@ static const char* token_name(TokenType t) {
             return "TOKEN_RIGHT_SHIFT";
         case TOKEN_RSHIFT_EQUALS:
             return "TOKEN_RSHIFT_EQUALS";
-        case TOKEN_STAR:
-            return "TOKEN_STAR";
-        case TOKEN_STAR_ASSIGN:
-            return "TOKEN_STAR_ASSIGN";
-        case TOKEN_SLASH:
-            return "TOKEN_SLASH";
-        case TOKEN_SLASH_ASSIGN:
-            return "TOKEN_SLASH_ASSIGN";
-        case TOKEN_PERCENT:
-            return "TOKEN_PERCENT";
         case TOKEN_CARET:
             return "TOKEN_CARET";
         case TOKEN_XOR_EQUALS:
@@ -132,10 +130,16 @@ static const char* token_name(TokenType t) {
             return "TOKEN_AMPERSAND";
         case TOKEN_AND_EQUALS:
             return "TOKEN_AND_EQUALS";
+        case TOKEN_LOGICAL_AND:
+            return "TOKEN_LOGICAL_AND";
         case TOKEN_PIPE:
             return "TOKEN_PIPE";
         case TOKEN_OR_EQUALS:
             return "TOKEN_OR_EQUALS";
+        case TOKEN_LOGICAL_OR:
+            return "TOKEN_LOGICAL_OR";
+        case TOKEN_LOGICAL_NOT:
+            return "TOKEN_LOGICAL_NOT";
         case TOKEN_TILDE:
             return "TOKEN_TILDE";
         case TOKEN_DOT:
@@ -156,6 +160,8 @@ static const char* token_name(TokenType t) {
             return "TOKEN_RBRACKET";
         case TOKEN_SEMICOLON:
             return "TOKEN_SEMICOLON";
+        case TOKEN_COMMA:
+            return "TOKEN_COMMA";
         case TOKEN_COLON:
             return "TOKEN_COLON";
         case TOKEN_QUESTION:
@@ -179,24 +185,9 @@ static int token_eq(Token* t, TokenType type, const char* lexeme) {
 
 static Token* lex_all(const char* src, size_t* out_count, ErrorList* el) {
     Lexer* lx = init_lexer(src, el);
-    size_t cap = 64;
-    size_t n = 0;
-    Token* toks = malloc(sizeof(Token) * cap);
-    for (;;) {
-        if (n == cap) {
-            cap *= 2;
-            toks = realloc(toks, sizeof(Token) * cap);
-        }
-        size_t count;
-        Token* tokens = run_lexer(lx, &count);
-        Token t = tokens[0];
-        toks[n++] = t;
-        if (t.type == TOKEN_EOF)
-            break;
-    }
+    Token* tokens = run_lexer(lx, out_count);
     free_lexer(lx);
-    *out_count = n;
-    return toks;
+    return tokens;
 }
 
 static void free_tokens(Token* toks, size_t n) {
@@ -246,62 +237,98 @@ done:
     return pass;
 }
 
-/* ---------- full coverage lexer test ---------- */
+/* ---------- individual test cases ---------- */
 
 void run_lexer_tests(void) {
     int passed = 0, total = 0;
 
-    /* --------------- 100% Coverage Test --------------- */
+    /* --------------- Test 1: Keywords --------------- */
     {
         const ExpectedToken exp[] = {
-            /* keywords */
-            {TOKEN_IMPORT, "import"},
-            {TOKEN_IF, "if"},
-            {TOKEN_ELSE, "else"},
-            {TOKEN_FOR, "for"},
-            {TOKEN_WHILE, "while"},
-            {TOKEN_BREAK, "break"},
-            {TOKEN_CONTINUE, "continue"},
-            {TOKEN_RETURN, "return"},
-            {TOKEN_STRUCT, "struct"},
-            {TOKEN_CLASS, "class"},
-            {TOKEN_TRUE, "true"},
-            {TOKEN_FALSE, "false"},
-            {TOKEN_NULL, "null"},
-            {TOKEN_CONST, "const"},
-            /* types */
-            {TOKEN_INT, "int"},
-            {TOKEN_FLOAT, "float"},
-            {TOKEN_CHAR, "char"},
-            {TOKEN_STRING, "string"},
-            {TOKEN_I32, "i32"},
-            {TOKEN_I64, "i64"},
-            {TOKEN_U32, "u32"},
-            {TOKEN_U64, "u64"},
-            {TOKEN_F32, "f32"},
-            {TOKEN_F64, "f64"},
-            /* identifiers */
-            {TOKEN_IDENT, "myVar"},
-            {TOKEN_IDENT, "_hidden123"},
-            /* numbers */
-            {TOKEN_INT_LITERAL, "0"},
-            {TOKEN_INT_LITERAL, "123"},
-            {TOKEN_FLOAT_LITERAL, "4.56"},
-            {TOKEN_FLOAT_LITERAL, "7.89"},
-            /* chars */
-            {TOKEN_CHAR_LITERAL, "a"},
-            {TOKEN_CHAR_LITERAL, "\\"},
-            {TOKEN_CHAR_LITERAL, "z"},
-            /* strings */
+            {TOKEN_IMPORT, "import"},     {TOKEN_IF, "if"},         {TOKEN_ELSE, "else"},
+            {TOKEN_FOR, "for"},           {TOKEN_WHILE, "while"},   {TOKEN_BREAK, "break"},
+            {TOKEN_CONTINUE, "continue"}, {TOKEN_RETURN, "return"}, {TOKEN_STRUCT, "struct"},
+            {TOKEN_CLASS, "class"},       {TOKEN_TRUE, "true"},     {TOKEN_FALSE, "false"},
+            {TOKEN_NULL, "null"},         {TOKEN_CONST, "const"},   {TOKEN_EOF, NULL},
+        };
+        const char* src =
+            "import if else for while break continue return struct class true false null const";
+        total++;
+        passed += run_test("Keywords", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 2: Types --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_INT, "int"},       {TOKEN_FLOAT, "float"}, {TOKEN_CHAR, "char"},
+            {TOKEN_STRING, "string"}, {TOKEN_I32, "i32"},     {TOKEN_I64, "i64"},
+            {TOKEN_U32, "u32"},       {TOKEN_U64, "u64"},     {TOKEN_F32, "f32"},
+            {TOKEN_F64, "f64"},       {TOKEN_EOF, NULL},
+        };
+        const char* src = "int float char string i32 i64 u32 u64 f32 f64";
+        total++;
+        passed += run_test("Types", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 3: Identifiers --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "myVar"},      {TOKEN_IDENT, "_hidden123"}, {TOKEN_IDENT, "camelCase"},
+            {TOKEN_IDENT, "UPPER_CASE"}, {TOKEN_IDENT, "x"},          {TOKEN_EOF, NULL},
+        };
+        const char* src = "myVar _hidden123 camelCase UPPER_CASE x";
+        total++;
+        passed += run_test("Identifiers", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 4: Numbers --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_INT_LITERAL, "0"},         {TOKEN_INT_LITERAL, "123"},
+            {TOKEN_INT_LITERAL, "9999"},      {TOKEN_FLOAT_LITERAL, "4.56"},
+            {TOKEN_FLOAT_LITERAL, "7.89"},    {TOKEN_FLOAT_LITERAL, "0.5"},
+            {TOKEN_FLOAT_LITERAL, "123.456"}, {TOKEN_EOF, NULL},
+        };
+        const char* src = "0 123 9999 4.56 7.89 0.5 123.456";
+        total++;
+        passed += run_test("Numbers", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 5: Character Literals --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_CHAR_LITERAL, "a"},  {TOKEN_CHAR_LITERAL, "\\"}, {TOKEN_CHAR_LITERAL, "z"},
+            {TOKEN_CHAR_LITERAL, "\n"}, {TOKEN_CHAR_LITERAL, "\""}, {TOKEN_EOF, NULL},
+        };
+        const char* src = "'a' '\\\\' 'z' '\\n' '\\\"'";
+        total++;
+        passed += run_test("Character Literals", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 6: String Literals --------------- */
+    {
+        const ExpectedToken exp[] = {
             {TOKEN_STRING_LITERAL, ""},
+            {TOKEN_STRING_LITERAL, "hello"},
             {TOKEN_STRING_LITERAL, "line\nbreak"},
-            {TOKEN_STRING_LITERAL, "escaped\\\"quote"},
-            /* operators */
+            {TOKEN_STRING_LITERAL, "escaped\"quote"},
+            {TOKEN_STRING_LITERAL, "tab\ttab"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "\"\" \"hello\" \"line\\nbreak\" \"escaped\\\"quote\" \"tab\\ttab\"";
+        total++;
+        passed += run_test("String Literals", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 7: Operators --------------- */
+    {
+        const ExpectedToken exp[] = {
             {TOKEN_PLUS, "+"},
             {TOKEN_PLUS_PLUS, "++"},
             {TOKEN_PLUS_ASSIGN, "+="},
             {TOKEN_MINUS, "-"},
             {TOKEN_MINUS_MINUS, "--"},
+            {TOKEN_MINUS_ASSIGN, "-="},
             {TOKEN_ARROW, "->"},
             {TOKEN_STAR, "*"},
             {TOKEN_STAR_ASSIGN, "*="},
@@ -327,39 +354,78 @@ void run_lexer_tests(void) {
             {TOKEN_PIPE, "|"},
             {TOKEN_OR_EQUALS, "|="},
             {TOKEN_LOGICAL_OR, "||"},
+            {TOKEN_LOGICAL_NOT, "!"},
             {TOKEN_TILDE, "~"},
             {TOKEN_DOT, "."},
             {TOKEN_ELLIPSIS, "..."},
-            {TOKEN_LPAREN, "("},
-            {TOKEN_RPAREN, ")"},
-            {TOKEN_LBRACE, "{"},
-            {TOKEN_RBRACE, "}"},
-            {TOKEN_LBRACKET, "["},
-            {TOKEN_RBRACKET, "]"},
-            {TOKEN_SEMICOLON, ";"},
-            {TOKEN_COLON, ":"},
-            {TOKEN_QUESTION, "?"},
-            {TOKEN_AT, "@"},
-            /* EOF */
             {TOKEN_EOF, NULL},
         };
-
         const char* src =
-            "import if else for while break continue return struct class true false null const "
-            "int float char string i32 i64 u32 u64 f32 f64 "
-            "myVar _hidden123 "
-            "0 123 4.56 7.89 "
-            "'a' '\\' 'z' "
-            "\"\" \"line\\nbreak\" \"escaped\\\"quote\" "
-            "+ ++ += - -- -> * *= / /= % = == != < <= > >= << <<= >> >>= ^ ^= & &= && | |= || ~ . "
-            "... "
-            "() {} [] ; : ? @";
-
+            "+ ++ += - -- -= -> * *= / /= % = == != < <= > >= << <<= >> >>= ^ ^= & &= && | |= || ! "
+            "~ . ...";
         total++;
-        passed += run_test("100% coverage", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+        passed += run_test("Operators", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 8: Punctuation --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_LPAREN, "("},    {TOKEN_RPAREN, ")"},   {TOKEN_LBRACE, "{"},
+            {TOKEN_RBRACE, "}"},    {TOKEN_LBRACKET, "["}, {TOKEN_RBRACKET, "]"},
+            {TOKEN_SEMICOLON, ";"}, {TOKEN_COMMA, ","},    {TOKEN_COLON, ":"},
+            {TOKEN_QUESTION, "?"},  {TOKEN_AT, "@"},       {TOKEN_EOF, NULL},
+        };
+        const char* src = "( ) { } [ ] ; , : ? @";
+        total++;
+        passed += run_test("Punctuation", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 9: Comments --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_INT_LITERAL, "1"},
+            {TOKEN_PLUS, "+"},
+            {TOKEN_INT_LITERAL, "2"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "1 // This is a comment\n+ 2 /* multi\nline\ncomment */";
+        total++;
+        passed += run_test("Comments", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 10: Mixed Everything --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IF, "if"},         {TOKEN_LPAREN, "("},
+            {TOKEN_IDENT, "x"},       {TOKEN_EQUAL, "=="},
+            {TOKEN_INT_LITERAL, "5"}, {TOKEN_RPAREN, ")"},
+            {TOKEN_LBRACE, "{"},      {TOKEN_IDENT, "println"},
+            {TOKEN_LPAREN, "("},      {TOKEN_STRING_LITERAL, "x is 5"},
+            {TOKEN_RPAREN, ")"},      {TOKEN_SEMICOLON, ";"},
+            {TOKEN_RBRACE, "}"},      {TOKEN_EOF, NULL},
+        };
+        const char* src = "if (x == 5) { println(\"x is 5\"); }";
+        total++;
+        passed += run_test("Mixed Example", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 11: Type Declarations --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "x"},     {TOKEN_COLON, ":"},       {TOKEN_I32, "i32"},
+            {TOKEN_ASSIGN, "="},    {TOKEN_INT_LITERAL, "5"}, {TOKEN_SEMICOLON, ";"},
+            {TOKEN_IDENT, "ptr"},   {TOKEN_COLON, ":"},       {TOKEN_I32, "i32"},
+            {TOKEN_STAR, "*"},      {TOKEN_ASSIGN, "="},      {TOKEN_NULL, "null"},
+            {TOKEN_SEMICOLON, ";"}, {TOKEN_EOF, NULL},
+        };
+        const char* src = "x: i32 = 5; ptr: i32* = null;";
+        total++;
+        passed += run_test("Type Declarations", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
     }
 
     printf("\nLexer tests: %d / %d passed\n", passed, total);
-    if (passed != total)
+    if (passed != total) {
+        printf("Some tests failed. Fix your lexer!\n");
         exit(1);
+    }
 }
