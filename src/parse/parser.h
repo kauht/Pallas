@@ -2,7 +2,7 @@
 #define PARSER_H
 #include "../lex/lexer.h"
 #include "ast.h"
-#include "errors.h"
+#include "diagnostic.h"
 #include <stdbool.h>
 
 typedef struct Parser {

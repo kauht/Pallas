@@ -8,6 +8,7 @@
 
 static bool at_end(Parser* parser) {
 
+    return false;
 }
 
 static void advance(Parser* parser) {
@@ -18,7 +19,7 @@ static Token peek(Parser* parser) {
     if (parser->current < parser->count) {
         return parser->tokens[parser->current];
     }
-    return (Token){TOKEN_EOF, 0, 0, 0, 0, NULL};
+    return (Token){NULL, 0, 0, 0, 0, TOKEN_EOF};
 }
 
 static bool check(Parser* parser, TokenType type) {
@@ -41,7 +42,7 @@ static Token consume(Parser* parser) {
     if (parser->current < parser->count) {
         return parser->tokens[parser->current++];
     }
-    return (Token){TOKEN_EOF, 0, 0, 0, 0, NULL};
+    return (Token){NULL, 0, 0, 0, 0, TOKEN_EOF};
 }
 
 
@@ -54,57 +55,125 @@ static Token consume(Parser* parser) {
 
 /* Program Structure */
 
-static ASTNode* parse_program(Parser* parser){}
-static ASTNode* parse_top_decl(Parser* parser){}
-static ASTNode* parse_import(Parser* parser){}
+static ASTNode* parse_program(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_top_decl(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_import(Parser* parser){
+    return NULL;
+}
 
 /* Types */
 
-static Type* parse_type(Parser* parser){}
-static Type* parse_builtin_t(Parser* parser){}
-static Type* parse_sized_t(Parser* parser){}
-static Type* parse_user_t(Parser* parser){}
-static Type* parse_pointer_t(Parser* parser, Type* base){}
-static Type* parse_array_t(Parser* parser, Type* base){}
+static Type* parse_type(Parser* parser){
+    return NULL;
+}
+static Type* parse_builtin_t(Parser* parser){
+    return NULL;
+}
+static Type* parse_sized_t(Parser* parser){
+    return NULL;
+}
+static Type* parse_user_t(Parser* parser){
+    return NULL;
+}
+static Type* parse_pointer_t(Parser* parser, Type* base){
+    return NULL;
+}
+static Type* parse_array_t(Parser* parser, Type* base){
+    return NULL;
+}
 
 
 /* Declarations */
 
-static ASTNode* parse_func_decl(Parser* parser){}
-static ASTNode* parse_var_decl(Parser* parser){}
-static ASTNode* parse_struct_decl(Parser* parser){}
-static ASTNode* parse_class_decl(Parser* parser){}
-static ASTNode* parse_class_member(Parser* parser){}
-static ASTNode* parse_struct_member(Parser* parser){}
-static ASTNode* parse_param_list(Parser* parser){}
-static ASTNode* parse_param(Parser* parser){}
+static ASTNode* parse_func_decl(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_var_decl(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_struct_decl(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_class_decl(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_class_member(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_struct_member(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_param_list(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_param(Parser* parser){
+    return NULL;
+}
 
 
 /* Statements */
 
-static ASTNode* parse_statement(Parser* parser){}
+static ASTNode* parse_statement(Parser* parser){
+    return NULL;
+}
 
-static ASTNode* parse_if_stmt(Parser* parser){}
-static ASTNode* parse_while_stmt(Parser* parser){}
-static ASTNode* parse_for_stmt(Parser* parser){}
-static ASTNode* parse_return_stmt(Parser* parser){}
-static ASTNode* parse_expression_stmt(Parser* parser){}
+static ASTNode* parse_if_stmt(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_while_stmt(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_for_stmt(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_return_stmt(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_expression_stmt(Parser* parser){
+    return NULL;
+}
 
-static ASTNode* parse_block(Parser* parser){}
+static ASTNode* parse_block(Parser* parser){
+    return NULL;
+}
 
 
 /* Expressions */
 
-static ASTNode* parse_expression(Parser* parser){}
-static ASTNode* parse_assignment(Parser* parser){}
-static ASTNode* parse_logical_or(Parser* parser){}
-static ASTNode* parse_logical_and(Parser* parser){}
-static ASTNode* parse_equality(Parser* parser){}
-static ASTNode* parse_comparison(Parser* parser){}
-static ASTNode* parse_additive(Parser* parser){}
-static ASTNode* parse_multiplicative(Parser* parser){}
-static ASTNode* parse_primary(Parser* parser){}
-static ASTNode* parse_unary(Parser* parser){}
+static ASTNode* parse_expression(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_assignment(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_logical_or(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_logical_and(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_equality(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_comparison(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_additive(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_multiplicative(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_primary(Parser* parser){
+    return NULL;
+}
+static ASTNode* parse_unary(Parser* parser){
+    return NULL;
+}
 
 
 

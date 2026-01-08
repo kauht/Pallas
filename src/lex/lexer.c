@@ -5,10 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "errors.h"
-
-static ErrorList* error_list;
-
 static const struct {
     const char* name;
     TokenType type;
@@ -44,14 +40,16 @@ static const struct {
 
 // Helper Functions
 
-TokenType is_keyword(const char* str) {
-    size_t len = sizeof(keywords) / sizeof(keywords[0]);
-    for (size_t i = 0; i < len; i++) {
-        if (strcmp(str, keywords[i].name) == 0) {
-            return keywords[i].type;
-        }
+static char next_char(Lexer* lx) {
+    char c = lx->src[lx->pos];
+    lx->pos++;
+    if (c == '\n') {
+        lx->line++;
+        lx->column = 1;
+    } else {
+        lx->column++;
     }
-    return TOKEN_IDENT;
+    return c;
 }
 
 static char peek_char(Lexer* lx) {
@@ -66,32 +64,6 @@ static char peek_next_char(Lexer* lx) {
         return '\0';
     }
     return lx->src[lx->pos + 1];
-}
-
-static int match_char(Lexer* lx, char expected) {
-    if (peek_char(lx) == expected) {
-        next_char(lx);
-        return 1;
-    }
-    return 0;
-}
-
-static int is_alpha_numeric(char c) {
-    if (isalnum(c) || c == '_') {
-        return 1;
-    }
-    return 0;
-}
-
-static Token make_token(Lexer* lx, TokenType type, size_t start, size_t length, char* lexeme) {
-    Token tk;
-    tk.lexeme = lexeme;
-    tk.type = type;
-    tk.start = start;
-    tk.length = length;
-    tk.line = lx->line;
-    tk.column = lx->column - (lx->pos - start);
-    return tk;
 }
 
 static void skip_untracked(Lexer* lx) {
@@ -129,6 +101,69 @@ static void skip_untracked(Lexer* lx) {
     }
 }
 
+TokenType is_keyword(const char* str) {
+    size_t len = sizeof(keywords) / sizeof(keywords[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (strcmp(str, keywords[i].name) == 0) {
+            return keywords[i].type;
+        }
+    }
+    return TOKEN_IDENT;
+}
+
+static Token next_token(Lexer* lx) {
+    skip_untracked(lx);
+
+    if (lx->pos >= lx->length) {
+        return make_token(lx, TOKEN_EOF, lx->pos, 0, NULL);
+    }
+
+    char c = peek_char(lx);
+
+    if (isdigit(c)) {
+        return lex_number(lx);
+    }
+
+    if (isalpha(c) || c == '_') {
+        return lex_identifier(lx);
+    }
+
+    if (c == '"') {
+        return lex_string(lx);
+    }
+    if (c == '\'') {
+        return lex_char(lx);
+    }
+
+    return lex_operator(lx);
+}
+
+static int match_char(Lexer* lx, char expected) {
+    if (peek_char(lx) == expected) {
+        next_char(lx);
+        return 1;
+    }
+    return 0;
+}
+
+static int is_alpha_numeric(char c) {
+    if (isalnum(c) || c == '_') {
+        return 1;
+    }
+    return 0;
+}
+
+static Token make_token(Lexer* lx, TokenType type, size_t start, size_t length, char* lexeme) {
+    Token tk;
+    tk.lexeme = lexeme;
+    tk.type = type;
+    tk.start = start;
+    tk.length = length;
+    tk.line = lx->line;
+    tk.column = lx->column - (lx->pos - start);
+    return tk;
+}
+
 // Type-specific
 static Token lex_identifier(Lexer* lx) {
     size_t start = lx->pos;
@@ -155,7 +190,7 @@ static Token lex_number(Lexer* lx) {
             next_char(lx);
         } else if (c == '.') {
             if (is_float) {
-                push_error(error_list, "Too many decimal points in number", ERROR, lx->line,
+                push_error(lx->errors, "Too many decimal points in number", ERROR, lx->line,
                            lx->column, LEXER);
                 break;
             }
@@ -197,7 +232,7 @@ static Token lex_char(Lexer* lx) {
     if (peek_char(lx) == '\'') {
         next_char(lx);
     } else {
-        push_error(error_list, "Unterminated character literal", ERROR, lx->line, lx->column,
+        push_error(lx->errors, "Unterminated character literal", ERROR, lx->line, lx->column,
                    LEXER);
     }
 
@@ -231,7 +266,7 @@ static Token lex_string(Lexer* lx) {
         lexeme[length] = '\0';
         return make_token(lx, TOKEN_STRING_LITERAL, start, length, lexeme);
     } else {
-        push_error(error_list, "Unterminated string literal", ERROR, lx->line, lx->column, LEXER);
+        push_error(lx->errors, "Unterminated string literal", ERROR, lx->line, lx->column, LEXER);
         return make_token(lx, TOKEN_ERROR, start, lx->pos - start, NULL);
     }
 }
@@ -444,11 +479,11 @@ static Token lex_operator(Lexer* lx) {
     }
 }
 
-Lexer* init_lexer(const char* src, ErrorList* el) {
-    error_list = el;
+Lexer* init_lexer(const char* src, ErrorList* error_list) {
     Lexer* lx = (Lexer*)malloc(sizeof(Lexer));
     if (!lx)
         return NULL;
+    lx->errors = error_list;
     lx->src = src;
     lx->length = strlen(src);
     lx->pos = 0;
@@ -459,45 +494,6 @@ Lexer* init_lexer(const char* src, ErrorList* el) {
 
 void free_lexer(Lexer* lx) {
     free(lx);
-}
-
-static char next_char(Lexer* lx) {
-    char c = lx->src[lx->pos];
-    lx->pos++;
-    if (c == '\n') {
-        lx->line++;
-        lx->column = 1;
-    } else {
-        lx->column++;
-    }
-    return c;
-}
-
-static Token next_token(Lexer* lx) {
-    skip_untracked(lx);
-
-    if (lx->pos >= lx->length) {
-        return make_token(lx, TOKEN_EOF, lx->pos, 0, NULL);
-    }
-
-    char c = peek_char(lx);
-
-    if (isdigit(c)) {
-        return lex_number(lx);
-    }
-
-    if (isalpha(c) || c == '_') {
-        return lex_identifier(lx);
-    }
-
-    if (c == '"') {
-        return lex_string(lx);
-    }
-    if (c == '\'') {
-        return lex_char(lx);
-    }
-
-    return lex_operator(lx);
 }
 
 Token* run_lexer(Lexer* lx, size_t* count) {

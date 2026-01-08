@@ -1,30 +1,38 @@
 EXE = pallas
-SRC = ./src
-INC = ./include
-BUILD_DIR = ./build
+RELEASE_DIR = ./build/release
+DEBUG_DIR = ./build/debug
+BUILD_TYPE ?= Debug
 
-SRCS = $(shell find $(SRC) -name '*.c')
+ifeq ($(BUILD_TYPE),Release)
+    BUILD_DIR = $(RELEASE_DIR)
+else
+    BUILD_DIR = $(DEBUG_DIR)
+endif
 
-CC = gcc
-CFLAGS = -g -Wall -Wextra -I./include -I../include
+.PHONY: all build release debug run run-debug clean format
+
+all: build
 
 build:
-	@mkdir -p $(BUILD_DIR)
-	@$(CC) $(CFLAGS) $(SRCS) -o $(BUILD_DIR)/$(EXE)
+	@cmake -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
+	@cmake --build $(BUILD_DIR)
 
-compile: clean build
+build-release:
+	@$(MAKE) build BUILD_TYPE=Release
 
-run: build
-	./$(BUILD_DIR)/$(EXE)
+build-debug:
+	@$(MAKE) build BUILD_TYPE=Debug
 
-debug: clean
-	@mkdir -p $(BUILD_DIR)
-	@$(CC) $(CFLAGS) -DDEBUG $(SRCS) -o $(BUILD_DIR)/$(EXE)
-	./$(BUILD_DIR)/$(EXE)
+run: build-release
+	@$(RELEASE_DIR)/$(EXE)
 
+debug: build-debug
+	@$(DEBUG_DIR)/$(EXE)
 
 clean:
-	@rm -rf $(BUILD_DIR) $(EXE)
+	@if exist build rmdir /s /q build
+	@if exist $(EXE) del $(EXE)
+	@if exist pallas del pallas
 
 format:
 	@find src include -type f \( -name '*.c' -o -name '*.h' \) -print0 | xargs -0 clang-format -i

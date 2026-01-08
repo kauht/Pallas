@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #include "../lex/lexer.h"
-#include "errors.h"
+#include "diagnostic.h"
 
 void run_lexer_tests(void);
 

@@ -1,4 +1,4 @@
-#include "errors.h"
+#include "diagnostic.h"
 
 #include <stdlib.h>
 #include <string.h>

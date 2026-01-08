@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "errors.h"
+#include "diagnostic.h"
 
 typedef enum {
     /* Special */
@@ -124,15 +124,12 @@ typedef struct {
     size_t line;
     size_t column;
 
-    // ErrorList* s;
+    ErrorList* errors;
 } Lexer;
 
-Lexer* init_lexer(const char* src, ErrorList* el);
+Lexer* init_lexer(const char* src, ErrorList* error_list);
 Token* run_lexer(Lexer* lx, size_t* count);
 void free_lexer(Lexer* lx);
-
-static char next_char(Lexer* lx);
-static Token next_token(Lexer* lx);
 
 void free_token(Token* t);
 
