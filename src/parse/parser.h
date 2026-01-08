@@ -1,9 +1,10 @@
 #ifndef PARSER_H
 #define PARSER_H
+#include <stdbool.h>
+
 #include "../lex/lexer.h"
 #include "ast.h"
 #include "diagnostic.h"
-#include <stdbool.h>
 
 typedef struct Parser {
     Token* tokens;
@@ -23,9 +24,16 @@ typedef enum {
     TYPE_BOOL,
 
     /* Explicitly Sized Types */
-    TYPE_I8, TYPE_I16, TYPE_I32, TYPE_I64,
-    TYPE_U8, TYPE_U16, TYPE_U32, TYPE_U64,
-    TYPE_F32, TYPE_F64,
+    TYPE_I8,
+    TYPE_I16,
+    TYPE_I32,
+    TYPE_I64,
+    TYPE_U8,
+    TYPE_U16,
+    TYPE_U32,
+    TYPE_U64,
+    TYPE_F32,
+    TYPE_F64,
 
     /* Other */
     TYPE_POINTER,
@@ -49,6 +57,7 @@ Parser* init_parser(Token* tks, uint32_t count, ErrorList* error_list);
 
 ASTNode* run_parser(Parser* parser);
 
-ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32_t line, uint32_t column);
+ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32_t line,
+                         uint32_t column);
 
 #endif /* PARSER_H */

@@ -9,7 +9,7 @@ static const struct {
     const char* name;
     TokenType type;
 } keywords[] = {
-    /* keywords */
+    /* Keywords */
     {"import", TOKEN_IMPORT},
     {"if", TOKEN_IF},
     {"else", TOKEN_ELSE},
@@ -38,8 +38,6 @@ static const struct {
     {"f64", TOKEN_F64},
 };
 
-// Helper Functions
-
 static char next_char(Lexer* lx) {
     char c = lx->src[lx->pos];
     lx->pos++;
@@ -64,78 +62,6 @@ static char peek_next_char(Lexer* lx) {
         return '\0';
     }
     return lx->src[lx->pos + 1];
-}
-
-static void skip_untracked(Lexer* lx) {
-    while (lx->pos < lx->length) {
-        char c = peek_char(lx);
-
-        /* White space */
-        if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-            next_char(lx);
-            continue;
-        }
-
-        /* Single-line comment */
-        if (c == '/' && peek_next_char(lx) == '/') {
-            while (peek_char(lx) != '\n' && peek_char(lx) != '\0') {
-                next_char(lx);
-            }
-            continue;
-        }
-
-        /* Multi-line comment */
-        if (c == '/' && peek_next_char(lx) == '*') {
-            next_char(lx);
-            next_char(lx);
-            while (peek_char(lx) && !(peek_char(lx) == '*' && peek_next_char(lx) == '/')) {
-                next_char(lx);
-            }
-            if (peek_char(lx)) {
-                next_char(lx);
-                next_char(lx);
-            }
-            continue;
-        }
-        break;
-    }
-}
-
-TokenType is_keyword(const char* str) {
-    size_t len = sizeof(keywords) / sizeof(keywords[0]);
-    for (size_t i = 0; i < len; i++) {
-        if (strcmp(str, keywords[i].name) == 0) {
-            return keywords[i].type;
-        }
-    }
-    return TOKEN_IDENT;
-}
-
-static Token next_token(Lexer* lx) {
-    skip_untracked(lx);
-
-    if (lx->pos >= lx->length) {
-        return make_token(lx, TOKEN_EOF, lx->pos, 0, NULL);
-    }
-
-    char c = peek_char(lx);
-
-    if (isdigit(c)) {
-        return lex_number(lx);
-    }
-
-    if (isalpha(c) || c == '_') {
-        return lex_identifier(lx);
-    }
-
-    if (c == '"') {
-        return lex_string(lx);
-    }
-    if (c == '\'') {
-        return lex_char(lx);
-    }
-
-    return lex_operator(lx);
 }
 
 static int match_char(Lexer* lx, char expected) {
@@ -164,7 +90,48 @@ static Token make_token(Lexer* lx, TokenType type, size_t start, size_t length, 
     return tk;
 }
 
-// Type-specific
+TokenType is_keyword(const char* str) {
+    size_t len = sizeof(keywords) / sizeof(keywords[0]);
+    for (size_t i = 0; i < len; i++) {
+        if (strcmp(str, keywords[i].name) == 0) {
+            return keywords[i].type;
+        }
+    }
+    return TOKEN_IDENT;
+}
+
+static void skip_untracked(Lexer* lx) {
+    while (lx->pos < lx->length) {
+        char c = peek_char(lx);
+
+        if (c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+            next_char(lx);
+            continue;
+        }
+
+        if (c == '/' && peek_next_char(lx) == '/') {
+            while (peek_char(lx) != '\n' && peek_char(lx) != '\0') {
+                next_char(lx);
+            }
+            continue;
+        }
+
+        if (c == '/' && peek_next_char(lx) == '*') {
+            next_char(lx);
+            next_char(lx);
+            while (peek_char(lx) && !(peek_char(lx) == '*' && peek_next_char(lx) == '/')) {
+                next_char(lx);
+            }
+            if (peek_char(lx)) {
+                next_char(lx);
+                next_char(lx);
+            }
+            continue;
+        }
+        break;
+    }
+}
+
 static Token lex_identifier(Lexer* lx) {
     size_t start = lx->pos;
     while (is_alpha_numeric(lx->src[lx->pos])) {
@@ -181,6 +148,7 @@ static Token lex_identifier(Lexer* lx) {
     Token t = make_token(lx, tt, start, len, s);
     return t;
 }
+
 static Token lex_number(Lexer* lx) {
     size_t start = lx->pos;
     int is_float = 0;
@@ -243,6 +211,7 @@ static Token lex_char(Lexer* lx) {
 
     return make_token(lx, TOKEN_CHAR_LITERAL, start, length, lexeme);
 }
+
 static Token lex_string(Lexer* lx) {
     size_t start = lx->pos;
     next_char(lx);
@@ -270,11 +239,12 @@ static Token lex_string(Lexer* lx) {
         return make_token(lx, TOKEN_ERROR, start, lx->pos - start, NULL);
     }
 }
+
 static Token lex_operator(Lexer* lx) {
     size_t start = lx->pos;
     char c = next_char(lx);
 
-    char* lexeme = (char*)malloc(4);  // max size + '\0'
+    char* lexeme = (char*)malloc(4);
     lexeme[0] = c;
     lexeme[1] = '\0';
     size_t length = 1;
@@ -477,6 +447,34 @@ static Token lex_operator(Lexer* lx) {
         default:
             return make_token(lx, TOKEN_ERROR, start, length, lexeme);
     }
+}
+
+/* Main */
+static Token next_token(Lexer* lx) {
+    skip_untracked(lx);
+
+    if (lx->pos >= lx->length) {
+        return make_token(lx, TOKEN_EOF, lx->pos, 0, NULL);
+    }
+
+    char c = peek_char(lx);
+
+    if (isdigit(c)) {
+        return lex_number(lx);
+    }
+
+    if (isalpha(c) || c == '_') {
+        return lex_identifier(lx);
+    }
+
+    if (c == '"') {
+        return lex_string(lx);
+    }
+    if (c == '\'') {
+        return lex_char(lx);
+    }
+
+    return lex_operator(lx);
 }
 
 Lexer* init_lexer(const char* src, ErrorList* error_list) {

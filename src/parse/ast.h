@@ -28,15 +28,29 @@ typedef struct ASTNode {
 
     union {
         // For binary expressions
-        struct { ASTNode* left; ASTNode* right; } binary;
+        struct {
+            ASTNode* left;
+            ASTNode* right;
+        } binary;
         // For unary expressions
-        struct { ASTNode* operand; } unary;
+        struct {
+            ASTNode* operand;
+        } unary;
         // For literals/identifiers
-        struct { char* value; } literal;
+        struct {
+            char* value;
+        } literal;
         // For blocks/statements
-        struct { ASTNode** statements; int count; } block;
+        struct {
+            ASTNode** statements;
+            int count;
+        } block;
         // For function declarations
-        struct { char* name; ASTNode* params; ASTNode* body; } function;
+        struct {
+            char* name;
+            ASTNode* params;
+            ASTNode* body;
+        } function;
     };
 } ASTNode;
 #endif /* AST_H */

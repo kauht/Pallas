@@ -187,7 +187,9 @@ static Token* lex_all(const char* src, size_t* out_count, ErrorList* el) {
             cap *= 2;
             toks = realloc(toks, sizeof(Token) * cap);
         }
-        Token t = next_token(lx);
+        size_t count;
+        Token* tokens = run_lexer(lx, &count);
+        Token t = tokens[0];
         toks[n++] = t;
         if (t.type == TOKEN_EOF)
             break;
