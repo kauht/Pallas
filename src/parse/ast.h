@@ -20,15 +20,23 @@ typedef enum {
     AST_IDENT,
 } ASTNodeType;
 
+typedef struct ASTNode ASTNode;
+
 typedef struct ASTNode {
     ASTNodeType type;
-    size_t start;
-    size_t length;
-    size_t line;
-    size_t column;
+    size_t start, length, line, column;
 
-    struct ASTNode* left;
-    struct ASTNode* right;
-    void* payload;
+    union {
+        // For binary expressions
+        struct { ASTNode* left; ASTNode* right; } binary;
+        // For unary expressions
+        struct { ASTNode* operand; } unary;
+        // For literals/identifiers
+        struct { char* value; } literal;
+        // For blocks/statements
+        struct { ASTNode** statements; int count; } block;
+        // For function declarations
+        struct { char* name; ASTNode* params; ASTNode* body; } function;
+    };
 } ASTNode;
 #endif /* AST_H */

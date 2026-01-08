@@ -114,16 +114,20 @@ Parser* init_parser(Token* tks, uint32_t count, ErrorList* error_list) {
     Parser* parser = (Parser*)malloc(sizeof(Parser));
     parser->errors = error_list;
     parser->count = count;
-
-
+    parser->panic = false;
+    parser->tokens = tks;
+    parser->current = 0;
+    return parser;
 }
 
 ASTNode* run_parser(Parser* parser) {
 
 }
 
-ASTNode* create_ast_node(ASTNode* left, ASTNode* right) {
+ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32_t line, uint32_t column ) {
+    ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
 
+    return node;
 }
 
 static void synchronize(Parser* parser) {

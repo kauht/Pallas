@@ -10,50 +10,85 @@ CFG Syntax:
     - * = zero or more
 
 Examples:
-    - `Program -> Decl*` means "Program is defined as zero or more Declarations"
-    - `Decl -> FunDecl | VarDecl` means "Declaration is defined as either a Function Declaration or a Variable Declaration"
-    - `FunDecl -> 'fn' IDENT '(' ParamList? ')' Block` means "A Function Declaration is defined as "fn name (optionalParams) {}""
+    - `Program  -> Decl*` means "Program is defined as zero or more Declarations"
+    - `Decl     -> FunDecl | VarDecl` means "Declaration is defined as either a Function Declaration or a Variable Declaration"
+    - `FunDecl  -> 'fn' IDENT TOKEN_LPAREN ParamList? TOKEN_RPAREN Block` means "A Function Declaration is defined as "fn name (optionalParams) {}""
 
 
-# Program Structure
+# Program
 Program     -> Import* TopDecl*
-TopDecl     -> FunDecl | StructDecl | ClassDecl | VarDecl
-Import      -> 'import' IDENT ('.' IDENT)* ';'
+TopDecl     -> FunDecl
+             | StructDecl
+             | ClassDecl
+             | VarDecl
+
+Import      -> TOKEN_IMPORT TOKEN_IDENT ( TOKEN_DOT TOKEN_IDENT )* TOKEN_SEMICOLON
+
 
 # Types
 Type        -> BuiltinType | UserType | PointerType
-BuiltinType -> 'int' | 'float' | 'double' | 'char' | 'bool' | SizedType
-SizedType   -> 'i8' | 'i16' | 'i32' | 'i64' | 'u8' | 'u16' | 'u32' | 'u64' | 'f32' | 'f64'
+BuiltinType -> TOKEN_INT | TOKEN_FLOAT | TOKEN_DOUBLE | TOKEN_CHAR | TOKEN_STRING | TOKEN_BOOL | SizedType
+SizedType   -> TOKEN_I8 | TOKEN_I16 | TOKEN_I32 | TOKEN_I64
+             | TOKEN_U8 | TOKEN_U16 | TOKEN_U32 | TOKEN_U64
+             | TOKEN_F32 | TOKEN_F64
 UserType    -> TOKEN_IDENT
-PointerType -> Type '*'
+PointerType -> Type TOKEN_STAR
 
 # Declarations
-FunDecl     -> TOKEN_IDENT TOKEN_LPAREN PARAMS* TOKEN_RPAREN ':' Type Block
-VarDecl     -> TOKEN_IDENT ':' Type ('=' Expression)? ';'
-StructDecl  -> 'struct' IDENT TOKEN_LBRACE StructMem* TOKEN_RBRACE
-ClassDecl   -> 'class' IDENT TOKEN_LBRACE ClassMem* TOKEN_RBRACE
-StructMem   -> idfk
-ClassMem    ->
+FunDecl     -> TOKEN_IDENT TOKEN_LPAREN ParamList? TOKEN_RPAREN TOKEN_COLON Type Block
+ParamList   -> Param ( TOKEN_COMMA Param )*
+Param       -> TOKEN_IDENT TOKEN_COLON Type
+
+VarDecl     -> TOKEN_IDENT TOKEN_COLON Type ( TOKEN_ASSIGN Expression )? TOKEN_SEMICOLON
+
+StructDecl  -> TOKEN_STRUCT TOKEN_IDENT TOKEN_LBRACE StructMember* TOKEN_RBRACE
+StructMember-> ( VarDecl | FunDecl )
+
+ClassDecl   -> TOKEN_CLASS TOKEN_IDENT TOKEN_LBRACE ClassMember* TOKEN_RBRACE
+ClassMember -> ( VarDecl | FunDecl )
 
 # Statements
-Statement   -> IfStmt | WhileStmt | ForStmt | ReturnStmt | Block
-IfStmt      -> 'if' TOKEN_LPAREN Expression TOKEN_RPAREN Block (else 'block')?        else if?
-WhileStmt   -> 'while' TOKEN_LPAREN Expression* TOKEN_RPAREN Block
-ForStmt     -> 'for' TOKEN_LPAREN (VarDecl | ExpressionStmt)? TOKEN_SEMICOLON Expression? TOKEN_SEMICOLON Expression? TOKEN_RPAREN Block
-ReturnStmt  -> 'return' IDENT ';'
-Block       -> '{' (VarDecl | Statement)* '}'
+Statement   -> IfStmt
+             | WhileStmt
+             | ForStmt
+             | ReturnStmt
+             | ExpressionStmt
+             | Block
+
+IfStmt      -> TOKEN_IF TOKEN_LPAREN Expression TOKEN_RPAREN Block ( TOKEN_ELSE ( IfStmt | Block ) )?
+WhileStmt   -> TOKEN_WHILE TOKEN_LPAREN Expression TOKEN_RPAREN Block
+ForStmt     -> TOKEN_FOR TOKEN_LPAREN ( VarDecl | ExpressionStmt | TOKEN_SEMICOLON ) Expression? TOKEN_SEMICOLON Expression? TOKEN_RPAREN Block
+ReturnStmt  -> TOKEN_RETURN Expression? TOKEN_SEMICOLON
+ExpressionStmt -> Expression TOKEN_SEMICOLON
+
+Block       -> TOKEN_LBRACE ( VarDecl | Statement )* TOKEN_RBRACE
 
 # Expressions
 Expression  -> Assignment
+
 Assignment  -> LogicalOr ( TOKEN_ASSIGN Assignment )?
+
 LogicalOr   -> LogicalAnd ( TOKEN_LOGICAL_OR LogicalAnd )*
 LogicalAnd  -> Equality ( TOKEN_LOGICAL_AND Equality )*
+
 Equality    -> Comparison ( ( TOKEN_EQUAL | TOKEN_NOT_EQUAL ) Comparison )*
 Comparison  -> Additive ( ( TOKEN_LESS | TOKEN_LESS_EQUAL | TOKEN_GREATER | TOKEN_GREATER_EQUAL ) Additive )*
+
 Additive    -> Multiplicative ( ( TOKEN_PLUS | TOKEN_MINUS ) Multiplicative )*
 Multiplicative  -> Unary ( ( TOKEN_STAR | TOKEN_SLASH | TOKEN_PERCENT) Unary)*
-Unary       -> ( TOKEN_LOGICAL_NOT | TOKEN_MINUS | TOKEN_PLUS_PLUS | TOKEN_MINUS_MINUS )? Primary
-Primary     -> TOKEN_IDENT | TOKEN_INT_LITERAL | TOKEN_FLOAT_LITERAL | TOKEN_CHAR_LITERAL | TOKEN_STRING_LITERAL | TOKEN_LPAREN Expression TOKEN_RPAREN
+
+Unary       -> ( TOKEN_LOGICAL_NOT
+               | TOKEN_MINUS
+               | TOKEN_PLUS_PLUS
+               | TOKEN_MINUS_MINUS
+               )? Primary
+
+Primary     -> TOKEN_IDENT
+             | TOKEN_INT_LITERAL
+             | TOKEN_FLOAT_LITERAL
+             | TOKEN_CHAR_LITERAL
+             | TOKEN_STRING_LITERAL
+             | TOKEN_LPAREN Expression TOKEN_RPAREN
 
 # Extras
 variadics

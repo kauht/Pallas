@@ -49,6 +49,6 @@ Parser* init_parser(Token* tks, uint32_t count, ErrorList* error_list);
 
 ASTNode* run_parser(Parser* parser);
 
-ASTNode* create_ast_node(ASTNode* left, ASTNode* right);
+ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32_t line, uint32_t column);
 
 #endif /* PARSER_H */
