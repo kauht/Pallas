@@ -27,25 +27,21 @@ typedef struct ASTNode {
     size_t start, length, line, column;
 
     union {
-        // For binary expressions
         struct {
             ASTNode* left;
             ASTNode* right;
+            uint32_t line, column;
         } binary;
-        // For unary expressions
         struct {
             ASTNode* operand;
         } unary;
-        // For literals/identifiers
         struct {
             char* value;
         } literal;
-        // For blocks/statements
         struct {
             ASTNode** statements;
             int count;
         } block;
-        // For function declarations
         struct {
             char* name;
             ASTNode* params;

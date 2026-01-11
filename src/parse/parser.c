@@ -2,25 +2,38 @@
 
 #include <stdarg.h>
 #include <stdlib.h>
-#include <string.h>
+#include <stdio.h>
 
 #include "ast.h"
 
 /* Helper */
 
-static bool at_end(Parser* parser) {
-    return false;
+static void error(Parser* parser, char* fmt, ...) {
+
+
+    va_list args;
+    va_start(args, fmt);
+    char* formatted;
+    //vfprintf(formatted, fmt, args);
+
+    //push_error();
+    va_end(args);
+    return /* */;
 }
 
-static void advance(Parser* parser) {
-    parser->current++;
+static bool at_end(Parser* parser) {
+    return parser->current >= parser->count || parser->tokens[parser->current].type == TOKEN_EOF;
+}
+
+static Token advance(Parser* parser) {
+    if (!at_end(parser)) {
+        parser->current++;
+    }
+    return parser->tokens[parser->current - 1];
 }
 
 static Token peek(Parser* parser) {
-    if (parser->current < parser->count) {
-        return parser->tokens[parser->current];
-    }
-    return (Token){NULL, 0, 0, 0, 0, TOKEN_EOF};
+    return parser->tokens[parser->current];
 }
 
 static bool check(Parser* parser, TokenType type) {
@@ -31,19 +44,35 @@ static Token previous(Parser* parser) {
     return parser->tokens[parser->current - 1];
 }
 
-static bool match(Parser* parser, TokenType type) {
+static bool _match(Parser* parser, TokenType type) {
     if (check(parser, type)) {
         advance(parser);
         return true;
     }
     return false;
 }
-
 static Token consume(Parser* parser) {
-    if (parser->current < parser->count) {
+    if (!at_end(parser)) {
         return parser->tokens[parser->current++];
     }
     return (Token){NULL, 0, 0, 0, 0, TOKEN_EOF};
+}
+
+static bool match(Parser* parser, uint32_t count, ...) {
+    va_list args;
+    va_start(args, count);
+
+    for (uint32_t i = 0; i < count; i++) {
+        TokenType tk = va_arg(args, TokenType);
+        if (check(parser, tk)) {
+            advance(parser);
+            va_end(args);
+            return true;
+        }
+    }
+
+    va_end(args);
+    return false;
 }
 
 /* CFG Rules */
@@ -51,6 +80,14 @@ static Token consume(Parser* parser) {
 /* Program Structure */
 
 static ASTNode* parse_program(Parser* parser) {
+    while(1) {
+        if (at_end(parser)) {
+            return NULL;
+        }
+        // Parse Imports
+
+        // Parse top level decls
+    }
     return NULL;
 }
 static ASTNode* parse_top_decl(Parser* parser) {
@@ -64,14 +101,20 @@ static ASTNode* parse_import(Parser* parser) {
 
 static Type* parse_type(Parser* parser) {
     return NULL;
+    // Built-in | User | Pointer
 }
 static Type* parse_builtin_t(Parser* parser) {
+    // TOKEN_INT | TOKEN_FLOAT | TOKEN_DOUBLE | TOKEN_CHAR | TOKEN_STRING | TOKEN_BOOL
     return NULL;
 }
 static Type* parse_sized_t(Parser* parser) {
+    // | TOKEN_I8 | TOKEN_I16 | TOKEN_I32 | TOKEN_I64
+    // | TOKEN_U8 | TOKEN_U16 | TOKEN_U32 | TOKEN_U64
+    // | TOKEN_F32 | TOKEN_F64
     return NULL;
 }
 static Type* parse_user_t(Parser* parser) {
+    // Custom Class/Structs
     return NULL;
 }
 static Type* parse_pointer_t(Parser* parser, Type* base) {
@@ -161,6 +204,22 @@ static ASTNode* parse_multiplicative(Parser* parser) {
     return NULL;
 }
 static ASTNode* parse_primary(Parser* parser) {
+    TokenType t = peek(parser).type;
+    if (t == TOKEN_IDENT) {
+        // Create Identifier Node
+    }
+    if (t == TOKEN_INT_LITERAL || t == TOKEN_CHAR_LITERAL || t == TOKEN_FLOAT_LITERAL || t == TOKEN_STRING_LITERAL) {
+
+    }
+    if (t == TOKEN_LPAREN) {
+        consume(parser);
+        parse_expression(parser);
+        if (peek(parser).type != TOKEN_RPAREN) {
+            push_error(parser->errors, "Expected Expression", ERROR, parser->tokens[parser->current].line, parser->tokens[parser->current].column, PARSER);
+            synchronize(parser);
+            return create_ast_node(AST_UNKNOWN, NULL, NULL, parser->tokens[parser->current].line, parser->tokens[parser->current].column);
+        }
+    }
     return NULL;
 }
 static ASTNode* parse_unary(Parser* parser) {
@@ -180,14 +239,33 @@ Parser* init_parser(Token* tks, uint32_t count, ErrorList* error_list) {
 }
 
 ASTNode* run_parser(Parser* parser) {
+    parse_program(parser);
 }
 
 ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32_t line,
                          uint32_t column) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
+    node->line = line;
+    node->column = column;
+    node->start = 0;
+    node->length = 0;
+    node->type = type;
+    node->binary.left = left;
+    node->binary.right = right;
 
     return node;
 }
 
-static void synchronize(Parser* parser) {
+void synchronize(Parser* parser) {
+    TokenType t = peek(parser).type;
+    while (!at_end(parser)) {
+        if (t == TOKEN_SEMICOLON || t == TOKEN_RBRACE || t == TOKEN_COMMA || t == TOKEN_CLASS || t == TOKEN_STRUCT || t == TOKEN_IMPORT ||
+            t == TOKEN_FOR || t == TOKEN_IF || t == TOKEN_WHILE || t == TOKEN_RETURN) {
+            parser->panic = false;
+            return;
+        }
+
+        t = consume(parser).type;
+    }
+    parser->panic = false;
 }

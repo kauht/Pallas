@@ -14,7 +14,7 @@ endif
 all: build
 
 build:
-	@cmake -B $(BUILD_DIR) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
+	@cmake -B $(BUILD_DIR) -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
 	@cmake --build $(BUILD_DIR)
 
 build-release:

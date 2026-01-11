@@ -34,10 +34,16 @@ typedef enum {
     TOKEN_STRING_LITERAL,
 
     /* Types */
+    TOKEN_I8,
+    TOKEN_I16,
     TOKEN_I32,
     TOKEN_I64,
+    TOKEN_U8,
+    TOKEN_U16,
     TOKEN_U32,
     TOKEN_U64,
+    TOKEN_F8,
+    TOKEN_F16,
     TOKEN_F32,
     TOKEN_F64,
     TOKEN_INT,

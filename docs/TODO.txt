@@ -1,0 +1,76 @@
+-- LEXER
+- Make lexer handle unterminated comments
+    REVIEW: it does not push an error; it silently exits the loop. This should emit an error (and continue lexing in a safe state). Recommendation: on EOF while scanning a block comment, call push_error(... "Unterminated block comment" ...) and ensure at least one character is consumed to avoid infinite loops. Consider tracking nesting if you want nested comments (not required if spec doesn’t).
+
+- Fix lexeme ownership consistency in either the docs or lexer implementation
+    REVIEW: Docs state: “Every token lexeme is a pointer to the original source buffer using start and length” and “lexeme should not be freed,” while a separate “literal” is freed.
+    Code allocates a new null-terminated string for identifiers, numbers, strings, and chars, and tests call free_token to free t->lexeme. This contradicts the doc’s ownership model and implies lexeme must be freed.
+    Decide on one approach and update both code and docs:
+    Option A (slice): Make lexeme point into the original source, store start and length, and never free lexeme. Also provide decoded literal values separately if needed (e.g., value fields). This can reduce allocations but requires careful use (strings won’t be null-terminated).
+        Option B (owned string): Keep allocating decoded/owned strings and keep free_token as-is; update docs to match, removing the “pointer to original source” language.
+
+- Add better numeric literal support(e.g. hex with 0x prefix, binary as 0b prefix, "'" as seperator, suffixes like 'f' for float, etc.)
+    REVIEW: Current handling supports only base-10 integers and simple floats with a single dot. No support for exponents, underscores, hex/binary, or suffixes (not required if spec doesn’t want them). Docs indicate only simple ints/floats, so this is OK.
+    When encountering multiple dots (e.g., 1.2.3), it emits an error and stops consuming at the second dot, which is reasonable and consistent with “Too many decimal points.”
+
+- Improve error handling system
+    REVIEW: Keyword matching is case-sensitive and linear search; fine for now. If the set grows, consider a perfect hash or sorted binary search.
+
+
+-- PARSER
+- Implement Program AST root and parse_program loop
+  Review: Define a Program node that owns arrays for imports and top-level declarations. parse_program should iterate until EOF, first parsing zero or more imports, then top-level declarations. The current parse_program returns NULL without constructing anything. Ensure top-level error recovery so a bad decl doesn’t stall the loop.
+
+- Implement import parsing per grammar
+  Review: Parse `import IDENT ('.' IDENT)* ';'` and produce an Import AST node (you will need an AST_IMPORT kind) or store imports in a dedicated list on the Program node. Validate both the dotted path and trailing semicolon consumption.
+
+- Disambiguate top-level declarations in parse_top_decl
+  Review: Use lookahead to distinguish decl kinds: `STRUCT` → StructDecl, `CLASS` → ClassDecl, `IDENT '('` → FunDecl, `IDENT ':'` → VarDecl. If none match, report a syntax error and synchronize to the next viable top-level boundary.
+
+- Implement function declarations (parse_func_decl)
+  Review: Grammar: `IDENT '(' ParamList? ')' ':' Type Block`. Extend AST to represent function name, params, return type, and body. Add robust expects for parentheses, colon, and types with clear diagnostics. Return a well-formed AST_FUNCTION node.
+
+- Implement parameter list and parameters (parse_param_list, parse_param)
+  Review: Grammar: `ParamList -> Param (',' Param)*`, `Param -> IDENT ':' Type`. Design a parameter container (array/vector) on the function AST node. Handle empty param lists and produce good errors for missing `:` or type.
+
+- Implement variable declarations (parse_var_decl)
+  Review: Grammar: `IDENT ':' Type ('=' Expression)? ';'`. Create AST_VARIABLE with name, type, and optional initializer. Emit targeted errors for missing type, `=`, and `;` while recovering with synchronize.
+
+- Implement struct/class declarations and members
+  Review: Grammar: `struct/class IDENT '{' (VarDecl | FunDecl)* '}'`. Introduce AST_STRUCT and AST_CLASS nodes and a member list. Member parsing can reuse var/func decl parsing. Add synchronization to handle missing `}` without infinite loops.
+
+- Implement block parsing (parse_block)
+  Review: Grammar: `'{' ( VarDecl | Statement )* '}'`. Represent blocks as AST_BLOCK holding a vector of statements. Ensure the closing brace is consumed; on error, synchronize to `}` or semicolon to prevent loops.
+
+- Implement statement parsing (parse_statement)
+  Review: Dispatch based on first token: `if`, `while`, `for`, `return`, `{` for blocks, otherwise parse ExpressionStmt. Allow VarDecl inside blocks per grammar. Ensure ExpressionStmt consumes the trailing `;`.
+
+- Implement expression grammar with precedence
+  Review: Implement `parse_expression` as `parse_assignment`, with subfunctions for logical-or/and, equality, comparison, additive, multiplicative, unary, primary. Make assignment right-associative and binary operators left-associative. Introduce AST nodes for binary, unary, and assignment.
+
+- Fix parse_primary parenthesis handling and node creation
+  Review: After `(`, parse the inner expression, then require and consume `)`; on failure, report "Expected ')'" (not "Expected Expression"). Also, create AST nodes for identifiers and literals and return them. The current stub leaves `)` unconsumed and returns NULL.
+
+- Implement unary operators (!, -, ++, --)
+  Review: Support prefix forms as per grammar. Decide on postfix ++/-- (not in grammar); if unsupported, emit clear errors when encountered to avoid silent misparses. Ensure unary binds tighter than multiplicative.
+
+- Implement type parsing (parse_type, builtin/sized/user/pointer/array)
+  Review: Implement BuiltinType and SizedType to match the actual token set. Pointer types should be right-binding (Type `*` forming nested TYPE_POINTER). The code has a stub for array types but the grammar text doesn’t show array syntax—either add array syntax to grammar (e.g., `Type '[' INT ']'`) or remove array support stubs to avoid divergence.
+
+- Add consume_expected helper and structured error recovery
+  Review: Provide a `consume_expected(Parser*, TokenType, const char*)` to emit a targeted error at the current token, set panic, and call synchronize. Replace ad-hoc checks with this helper for consistency and clearer diagnostics.
+
+- Expand AST node kinds and normalize source location storage
+  Review: Add node kinds for Import, VarDecl, FunDecl, StructDecl, ClassDecl, Member, Block, If, While, For, Return, Binary, Unary, Assign, Call (if planned), Literal, Ident, and possibly TypeRef. Remove duplicate line/column fields inside union members and keep a single span per node to prevent inconsistency.
+
+- Implement Program node return in run_parser
+  Review: run_parser should return a non-NULL Program AST that owns the compilation unit. Currently it calls parse_program but does not return a constructed AST. Define ownership/lifetime clearly.
+
+- Establish memory management for AST/Type (arena allocator)
+  Review: Introduce a simple bump allocator for AST and Type nodes to simplify allocation and teardown. Provide a single destroy/reset at the end of parsing.
+
+- Add parser tests and AST dump for golden tests
+  Review: Create an AST pretty-printer/dumper and write tests for precedence/associativity, top-level disambiguation, statements/blocks, declarations, and error recovery. Snapshot tests will catch regressions early.
+
+- Review and refine synchronize() stop set
+  Review: Ensure synchronize stops at semicolon, right brace, and keywords starting new statements/declarations, including EOF. Confirm all parse error sites set `parser->panic` before calling synchronize to avoid tight loops.
