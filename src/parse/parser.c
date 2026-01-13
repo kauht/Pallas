@@ -242,8 +242,7 @@ ASTNode* run_parser(Parser* parser) {
     parse_program(parser);
 }
 
-ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32_t line,
-                         uint32_t column) {
+ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32_t line, uint32_t column) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
     node->line = line;
     node->column = column;
@@ -259,7 +258,7 @@ ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32
 void synchronize(Parser* parser) {
     TokenType t = peek(parser).type;
     while (!at_end(parser)) {
-        if (t == TOKEN_SEMICOLON || t == TOKEN_RBRACE || t == TOKEN_COMMA || t == TOKEN_CLASS || t == TOKEN_STRUCT || t == TOKEN_IMPORT ||
+        if (t == TOKEN_SEMICOLON || t == TOKEN_RBRACE || t == TOKEN_COMMA || t == TOKEN_IMPORT ||
             t == TOKEN_FOR || t == TOKEN_IF || t == TOKEN_WHILE || t == TOKEN_RETURN) {
             parser->panic = false;
             return;
@@ -268,4 +267,5 @@ void synchronize(Parser* parser) {
         t = consume(parser).type;
     }
     parser->panic = false;
+
 }
