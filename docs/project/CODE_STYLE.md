@@ -23,7 +23,7 @@
 ## Logging/Errors and diagnostics
 
 - Use logging (`log(level, fmt, ...)`).
-- Use errors (`error(level, line, collumn, fmt, ...)`)
+- Use errors (`error(level, line, column, fmt, ...)`)
 
 ---
 

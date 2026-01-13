@@ -10,7 +10,7 @@ Thanks for your interest in contributing to Pallas! This document outlines the r
 - Familiar with assembly
 
 ### Recommended
-Not required, but these books will give you a much better understanding of computer systems and extremely benneficial for a project like this:
+Not required, but these books will give you a much better understanding of computer systems and are extremely beneficial for a project like this:
 - "Computer Systems: A Programmer's Perspective"
 - "Concurrency in Action"
 - Skim "Compilers: Principles, Techniques, and Tools" (AKA The Dragon Book)
@@ -22,7 +22,7 @@ Not required, but these books will give you a much better understanding of compu
 1. Join Discord
 2. Read [DESIGN.md](DESIGN.md) to understand what we're building
 3. Read [CODE_STYLE.md](CODE_STYLE.md) and comply with our code style and practices.
-4. Chose something to work on, check [PROJECT.md](PROJECT.md)
+4. Choose something to work on, check [PROJECT.md](PROJECT.md)
 
 ---
 

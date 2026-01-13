@@ -1,7 +1,7 @@
 # Syntax Analysis(Parsing) in ADAN
 
 ## Purpose
-The purpose of Syntax Analysis is to detect syntax errors and verifies the gramatical structure of the program, then builds an Abstract Syntax Tree from the provided Token list for further processing.
+The purpose of Syntax Analysis is to detect syntax errors and verify the grammatical structure of the program, then build an Abstract Syntax Tree from the provided Token list for further processing.
 ---
 
 ## Input and Output
@@ -12,14 +12,14 @@ The parser returns an Abstract Syntax Tree
 ---
 
 ## Ownership
-- The lexer doesn't own the source or the list of Tokens
+- The parser doesn't own the source or the list of Tokens
 - Every token `lexeme` is a pointer to the original source buffer using start and length
 - Non literal ASTNode's don't allocate any memory
 
 ---
 
-## Lexer Lifetime
-The Lexer, along with all other major stages of the compiler, are created and destroyed by the compiler driver, each stage is created and destroyed in order one after another.
+## Parser Lifetime
+The Parser, along with all other major stages of the compiler, are created and destroyed by the compiler driver, each stage is created and destroyed in order one after another.
 
 ---
 

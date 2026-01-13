@@ -21,7 +21,7 @@ typedef enum {
 typedef struct {
     const char* message;
     size_t line;
-    size_t collumn;
+    size_t column;
     size_t length;
     Severity severity;
     Category category;

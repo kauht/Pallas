@@ -40,6 +40,9 @@ static bool check(Parser* parser, TokenType type) {
 }
 
 static Token previous(Parser* parser) {
+    if (parser->current == 0) {
+        return (Token){NULL, 0, 0, 0, 0, TOKEN_EOF};
+    }
     return parser->tokens[parser->current - 1];
 }
 
@@ -273,13 +276,16 @@ static ASTNode* parse_program(Parser* parser) {
         }
         // push into program->program.top_decls
     }
-    return NULL;
+    return program;
 }
 
 /* Main Functions */
 
 Parser* init_parser(Token* tks, uint32_t count, ErrorList* error_list) {
     Parser* parser = (Parser*)malloc(sizeof(Parser));
+    if (!parser) {
+        return NULL;
+    }
     parser->errors = error_list;
     parser->count = count;
     parser->panic = false;

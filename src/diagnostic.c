@@ -10,6 +10,7 @@ ErrorList* create_errors() {
     }
 
     error_list->size = 0;
+    error_list->capacity = 0;
     error_list->errors = NULL;
     return error_list;
 }
@@ -22,13 +23,17 @@ ErrorList* push_error(ErrorList* error_list, const char* message, Severity sever
         return NULL;
     }
 
-    char* msg_cpy = (char*)malloc(
-        sizeof(message));  // Note: Change strdup to cross-platform alternative (memcpy)
-    strcpy_s(msg_cpy, sizeof(message), msg_cpy);
-    Error error = {msg_cpy, line, column, strlen(msg_cpy), severity, category};
+    size_t msg_len = strlen(message);
+    char* msg_cpy = (char*)malloc(msg_len + 1);
+    if (!msg_cpy) {
+        return NULL;
+    }
+    memcpy(msg_cpy, message, msg_len + 1);
+    Error error = {msg_cpy, line, column, msg_len, severity, category};
 
     Error* temp = (Error*)realloc(error_list->errors, sizeof(Error) * (error_list->size + 1));
     if (!temp) {
+        free(msg_cpy);
         return NULL;
     }
     temp[error_list->size] = error;
