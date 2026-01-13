@@ -125,6 +125,8 @@ static void skip_untracked(Lexer* lx) {
             if (peek_char(lx)) {
                 next_char(lx);
                 next_char(lx);
+            } else {
+                push_error(lx->errors, "Unterminated block comment", ERROR, lx->line, lx->column, LEXER);
             }
             continue;
         }
@@ -134,12 +136,15 @@ static void skip_untracked(Lexer* lx) {
 
 static Token lex_identifier(Lexer* lx) {
     size_t start = lx->pos;
-    while (is_alpha_numeric(lx->src[lx->pos])) {
+    while (lx->pos < lx->length && is_alpha_numeric(lx->src[lx->pos])) {
         next_char(lx);
     }
     size_t len = lx->pos - start;
 
     char* s = (char*)malloc(len + 1);
+    if (!s) {
+        return make_token(lx, TOKEN_ERROR, start, 0, NULL);
+    }
     memcpy(s, lx->src + start, len);
     s[len] = '\0';
 
@@ -174,6 +179,9 @@ static Token lex_number(Lexer* lx) {
     }
     size_t length = lx->pos - start;
     char* lexeme = (char*)malloc(length + 1);
+    if (!lexeme) {
+        return make_token(lx, TOKEN_ERROR, start, 0, NULL);
+    }
     memcpy(lexeme, lx->src + start, length);
     lexeme[length] = '\0';
 
@@ -236,6 +244,9 @@ static Token lex_char(Lexer* lx) {
 
     size_t length = lx->pos - start;
     char* lexeme = malloc(2);
+    if (!lexeme) {
+        return make_token(lx, TOKEN_ERROR, start, 0, NULL);
+    }
     lexeme[0] = ch;
     lexeme[1] = '\0';
 
@@ -263,6 +274,9 @@ static Token lex_string(Lexer* lx) {
     }
 
     char* buffer = malloc(len + 1);
+    if (!buffer) {
+        return make_token(lx, TOKEN_ERROR, start, 0, NULL);
+    }
     size_t i = 0;
 
     while (lx->pos < lx->length && peek_char(lx) != '"') {
@@ -322,6 +336,9 @@ static Token lex_operator(Lexer* lx) {
     char c = next_char(lx);
 
     char* lexeme = (char*)malloc(4);
+    if (!lexeme) {
+        return make_token(lx, TOKEN_ERROR, start, 0, NULL);
+    }
     lexeme[0] = c;
     lexeme[1] = '\0';
     size_t length = 1;

@@ -22,7 +22,7 @@ These should be handled by the individual systems
 ## Error Model
 
 ### Severity levels
-Each severity level has it's own purpose, make sure you understand what what information you wish the user to understand before chosing.
+Each severity level has its own purpose. Make sure you understand what information you wish the user to understand before choosing.
 1. INFO     - For information messages that doesn't imply incorrect code, but to show the user the compilers behavior
 2. WARNING  - For suggestions for best code practices (e.g. incorrect or unneeded type casing, unused variables, unneeded memory allocations)
 3. ERROR    - For describing incorrect code which will break compilation (e.g. syntax errors and type errors)
@@ -31,7 +31,7 @@ Each severity level has it's own purpose, make sure you understand what what inf
 ---
 
 ### Categories
-Errors are seperated by category based on which stage of the compiler they originated:
+Errors are separated by category based on which stage of the compiler they originated:
 
 - Lexer
 - Parser

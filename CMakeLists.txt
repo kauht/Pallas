@@ -4,7 +4,7 @@ project(pallas)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_C_COMPILER_ID "GNU")
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+file(GLOB_RECURSE SRC_FILES src/*.c)
 
 file(GLOB_RECURSE SRC_FILES src/*.c)
 add_executable(pallas ${SRC_FILES})

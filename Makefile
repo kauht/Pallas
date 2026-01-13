@@ -9,7 +9,7 @@ else
     BUILD_DIR = $(DEBUG_DIR)
 endif
 
-.PHONY: all build release debug run run-debug clean format
+.PHONY: all build build-release build-debug run debug clean format
 
 all: build
 

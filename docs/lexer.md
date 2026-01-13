@@ -37,7 +37,7 @@ The Lexer, along with all other major stages of the compiler, are created and de
 ## Errors
 When lexer gets an invalid input, it:
 - Emits a TOKEN_ERROR
-- Records the errors location
+- Records the error's location
 - Consumes at least 1 character
 - Continues Lexing
 
