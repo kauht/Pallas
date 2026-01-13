@@ -45,7 +45,6 @@ typedef enum ASTNodeType {
     AST_STRING_LITERAL
 } ASTNodeType;
 
-
 struct ASTNode {
     ASTNodeType type;
     size_t start;
@@ -77,9 +76,9 @@ struct ASTNode {
         /* FunDecl -> IDENT '(' ParamList? ')' ':' Type Block */
         struct {
             char* name;
-            ASTNode* params; /* AST_PARAM_LIST or NULL */
+            ASTNode* params;      /* AST_PARAM_LIST or NULL */
             ASTNode* return_type; /* AST_TYPE_* */
-            ASTNode* body; /* AST_BLOCK */
+            ASTNode* body;        /* AST_BLOCK */
         } function_declaration;
 
         /* ParamList -> Param (',' Param)* */
@@ -98,7 +97,7 @@ struct ASTNode {
         /* VarDecl -> IDENT ':' Type ('=' Expression)? ';' */
         struct {
             char* name;
-            ASTNode* type; /* AST_TYPE_* */
+            ASTNode* type;        /* AST_TYPE_* */
             ASTNode* initializer; /* expression or NULL */
         } variable_declaration;
 
@@ -136,7 +135,7 @@ struct ASTNode {
         /* IfStmt */
         struct {
             ASTNode* condition;
-            ASTNode* then_block; /* BLOCK */
+            ASTNode* then_block;  /* BLOCK */
             ASTNode* else_branch; /* NULL, BLOCK, or IF */
         } if_statement;
 
@@ -148,10 +147,10 @@ struct ASTNode {
 
         /* ForStmt */
         struct {
-            ASTNode* init; /* VarDecl, ExprStatement, or NULL */
+            ASTNode* init;      /* VarDecl, ExprStatement, or NULL */
             ASTNode* condition; /* expression or NULL */
-            ASTNode* post; /* expression or NULL */
-            ASTNode* body; /* BLOCK */
+            ASTNode* post;      /* expression or NULL */
+            ASTNode* body;      /* BLOCK */
         } for_statement;
 
         /* ReturnStmt */
@@ -181,8 +180,8 @@ struct ASTNode {
 
         /* Assignment: LEFT = RIGHT */
         struct {
-            ASTNode *target; /* Left */
-            ASTNode *value; /* Right */
+            ASTNode* target; /* Left */
+            ASTNode* value;  /* Right */
         } assignment;
 
         struct {
@@ -197,13 +196,13 @@ struct ASTNode {
         } unary_expression;
 
         struct {
-            char *name;
+            char* name;
         } identifier;
 
         /* Literals */
         struct {
             int64_t value;
-            char   *lexeme;
+            char* lexeme;
         } int_literal;
 
         struct {

@@ -71,6 +71,3 @@
 
 - Add parser tests and AST dump for golden tests
   Review: Create an AST pretty-printer/dumper and write tests for precedence/associativity, top-level disambiguation, statements/blocks, declarations, and error recovery. Snapshot tests will catch regressions early.
-
-- Review and refine synchronize() stop set
-  Review: Ensure synchronize stops at semicolon, right brace, and keywords starting new statements/declarations, including EOF. Confirm all parse error sites set `parser->panic` before calling synchronize to avoid tight loops.

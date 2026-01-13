@@ -1,22 +1,21 @@
 #include "parser.h"
 
 #include <stdarg.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "ast.h"
+#include "diagnostic.h"
 
 /* Helper */
 
 static void error(Parser* parser, char* fmt, ...) {
-
-
     va_list args;
     va_start(args, fmt);
     char* formatted;
-    //vfprintf(formatted, fmt, args);
+    // vfprintf(formatted, fmt, args);
 
-    //push_error();
+    // push_error();
     va_end(args);
     return /* */;
 }
@@ -79,21 +78,36 @@ static bool match(Parser* parser, uint32_t count, ...) {
 
 /* Program Structure */
 
-static ASTNode* parse_program(Parser* parser) {
-    while(1) {
-        if (at_end(parser)) {
-            return NULL;
-        }
-        // Parse Imports
-
-        // Parse top level decls
-    }
-    return NULL;
-}
 static ASTNode* parse_top_decl(Parser* parser) {
     return NULL;
 }
+
 static ASTNode* parse_import(Parser* parser) {
+    ASTNode* node = create_ast_node(AST_IMPORT, peek(parser).line, peek(parser).column);
+    if (advance(parser).type != TOKEN_IMPORT) {
+        return NULL;
+    }
+    if (advance(parser).type != TOKEN_IDENT) {
+        push_error(parser->errors, "Expected TOKEN_IDENT", ERROR, previous(parser).line,
+                   previous(parser).column, PARSER);
+        synchronize(parser);
+    }
+    while (1) {
+        if (advance(parser).type != TOKEN_DOT) {
+            push_error(parser->errors, "Expected TOKEN_IDENT", ERROR, previous(parser).line,
+                       previous(parser).column, PARSER);
+            synchronize(parser);
+        }
+        if (advance(parser).type != TOKEN_IDENT) {
+            push_error(parser->errors, "Expected TOKEN_IDENT", ERROR, previous(parser).line,
+                       previous(parser).column, PARSER);
+            synchronize(parser);
+        }
+        if (advance(parser).type == TOKEN_SEMICOLON) {
+            break;
+        }
+    }
+
     return NULL;
 }
 
@@ -208,21 +222,57 @@ static ASTNode* parse_primary(Parser* parser) {
     if (t == TOKEN_IDENT) {
         // Create Identifier Node
     }
-    if (t == TOKEN_INT_LITERAL || t == TOKEN_CHAR_LITERAL || t == TOKEN_FLOAT_LITERAL || t == TOKEN_STRING_LITERAL) {
-
+    if (t == TOKEN_INT_LITERAL || t == TOKEN_CHAR_LITERAL || t == TOKEN_FLOAT_LITERAL ||
+        t == TOKEN_STRING_LITERAL) {
     }
     if (t == TOKEN_LPAREN) {
         consume(parser);
         parse_expression(parser);
         if (peek(parser).type != TOKEN_RPAREN) {
-            push_error(parser->errors, "Expected Expression", ERROR, parser->tokens[parser->current].line, parser->tokens[parser->current].column, PARSER);
+            push_error(parser->errors, "Expected Expression", ERROR,
+                       parser->tokens[parser->current].line, parser->tokens[parser->current].column,
+                       PARSER);
             synchronize(parser);
-            return create_ast_node(AST_UNKNOWN, NULL, NULL, parser->tokens[parser->current].line, parser->tokens[parser->current].column);
+            return create_ast_node(AST_UNKNOWN, parser->tokens[parser->current].line,
+                                   parser->tokens[parser->current].column);
         }
     }
     return NULL;
 }
 static ASTNode* parse_unary(Parser* parser) {
+    return NULL;
+}
+
+static ASTNode* parse_program(Parser* parser) {
+    ASTNode* program = create_ast_node(AST_PROGRAM, peek(parser).line, peek(parser).column);
+    if (!program) {
+        return NULL;
+    }
+
+    program->program.imports = NULL;
+    program->program.import_count = 0;
+    program->program.import_capacity = 0;
+    program->program.top_decls = NULL;
+    program->program.top_decl_count = 0;
+    program->program.top_decl_capacity = 0;
+
+    while (!at_end(parser) && check(parser, TOKEN_IMPORT)) {
+        ASTNode* import_node = parse_import(parser);
+        if (!import_node) {
+            break;
+        }
+        // push into program->program.imports with realloc
+    }
+    while (!at_end(parser)) {
+        ASTNode* decl = parse_top_decl(parser);
+        if (!decl) {
+            if (at_end(parser)) {
+                break;
+            }
+            continue;
+        }
+        // push into program->program.top_decls
+    }
     return NULL;
 }
 
@@ -242,30 +292,28 @@ ASTNode* run_parser(Parser* parser) {
     parse_program(parser);
 }
 
-ASTNode* create_ast_node(ASTNodeType type, ASTNode* left, ASTNode* right, uint32_t line, uint32_t column) {
+ASTNode* create_ast_node(ASTNodeType type, uint32_t line, uint32_t column) {
     ASTNode* node = (ASTNode*)malloc(sizeof(ASTNode));
-    node->line = line;
-    node->column = column;
-    node->start = 0;
-    node->length = 0;
-    node->type = type;
-    node->binary.left = left;
-    node->binary.right = right;
+    if (!node)
+        return NULL;
 
+    node->position.line = line;
+    node->position.column = column;
+    node->position.length = 0;
+    node->start = 0;
+    node->type = type;
     return node;
 }
 
 void synchronize(Parser* parser) {
-    TokenType t = peek(parser).type;
     while (!at_end(parser)) {
-        if (t == TOKEN_SEMICOLON || t == TOKEN_RBRACE || t == TOKEN_COMMA || t == TOKEN_IMPORT ||
-            t == TOKEN_FOR || t == TOKEN_IF || t == TOKEN_WHILE || t == TOKEN_RETURN) {
+        if (match(parser, 8, TOKEN_SEMICOLON, TOKEN_RBRACE, TOKEN_COMMA, TOKEN_IMPORT, TOKEN_FOR,
+                  TOKEN_IF, TOKEN_WHILE, TOKEN_RETURN)) {
             parser->panic = false;
             return;
         }
 
-        t = consume(parser).type;
+        consume(parser);
     }
     parser->panic = false;
-
 }

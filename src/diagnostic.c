@@ -22,7 +22,8 @@ ErrorList* push_error(ErrorList* error_list, const char* message, Severity sever
         return NULL;
     }
 
-    char* msg_cpy = (char*)malloc(sizeof(message));  // Note: Change strdup to cross-platform alternative (memcpy)
+    char* msg_cpy = (char*)malloc(
+        sizeof(message));  // Note: Change strdup to cross-platform alternative (memcpy)
     strcpy_s(msg_cpy, sizeof(message), msg_cpy);
     Error error = {msg_cpy, line, column, strlen(msg_cpy), severity, category};
 
