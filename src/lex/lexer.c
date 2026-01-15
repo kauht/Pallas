@@ -11,6 +11,7 @@ static const struct {
 } keywords[] = {
     /* Keywords */
     {"import", TOKEN_IMPORT},
+    {"include", TOKEN_INCLUDE},
     {"if", TOKEN_IF},
     {"else", TOKEN_ELSE},
     {"for", TOKEN_FOR},
@@ -20,20 +21,33 @@ static const struct {
     {"return", TOKEN_RETURN},
     {"struct", TOKEN_STRUCT},
     {"class", TOKEN_CLASS},
+    {"public", TOKEN_PUBLIC},
+    {"private", TOKEN_PRIVATE},
+    {"new", TOKEN_NEW},
+    {"delete", TOKEN_DELETE},
     {"true", TOKEN_TRUE},
     {"false", TOKEN_FALSE},
     {"null", TOKEN_NULL},
     {"const", TOKEN_CONST},
+    {"void", TOKEN_VOID},
 
     /* Types */
     {"int", TOKEN_INT},
     {"float", TOKEN_FLOAT},
+    {"double", TOKEN_DOUBLE},
     {"char", TOKEN_CHAR},
     {"string", TOKEN_STRING},
+    {"bool", TOKEN_BOOL},
+    {"i8", TOKEN_I8},
+    {"i16", TOKEN_I16},
     {"i32", TOKEN_I32},
     {"i64", TOKEN_I64},
+    {"u8", TOKEN_U8},
+    {"u16", TOKEN_U16},
     {"u32", TOKEN_U32},
     {"u64", TOKEN_U64},
+    {"f8", TOKEN_F8},
+    {"f16", TOKEN_F16},
     {"f32", TOKEN_F32},
     {"f64", TOKEN_F64},
 };
@@ -163,8 +177,8 @@ static Token lex_number(Lexer* lx) {
             next_char(lx);
         } else if (c == '.') {
             if (is_float) {
-                push_error(lx->errors, "Too many decimal points in number", ERROR, lx->line,
-                           lx->column, LEXER);
+                errors_add(lx->errors, lx->filename, "Too many decimal points in number", SEVERITY_ERROR, lx->line,
+                           lx->column, 0, CATEGORY_LEXER);
                 break;
             }
             if (isdigit(peek_next_char(lx))) {
@@ -238,8 +252,8 @@ static Token lex_char(Lexer* lx) {
     if (peek_char(lx) == '\'') {
         next_char(lx);
     } else {
-        push_error(lx->errors, "Unterminated character literal", ERROR, lx->line, lx->column,
-                   LEXER);
+        errors_add(lx->errors, lx->filename, "Unterminated character literal", SEVERITY_ERROR, lx->line, lx->column,
+                   0, CATEGORY_LEXER);
     }
 
     size_t length = lx->pos - start;
@@ -318,7 +332,7 @@ static Token lex_string(Lexer* lx) {
         }
     }
 
-    if (peek_char(lx) == '"') {
+    if (peek_char(lx) == '\"') {
         next_char(lx);
         buffer[i] = '\0';
 
@@ -326,7 +340,8 @@ static Token lex_string(Lexer* lx) {
         return make_token(lx, TOKEN_STRING_LITERAL, start, length, buffer);
     } else {
         free(buffer);
-        push_error(lx->errors, "Unterminated string literal", ERROR, lx->line, lx->column, LEXER);
+        errors_add(lx->errors, lx->filename, "Unterminated string literal", SEVERITY_ERROR, lx->line, lx->column, 0,
+                   CATEGORY_LEXER);
         return make_token(lx, TOKEN_ERROR, start, lx->pos - start, NULL);
     }
 }
@@ -571,12 +586,13 @@ static Token next_token(Lexer* lx) {
     return lex_operator(lx);
 }
 
-Lexer* init_lexer(const char* src, ErrorList* error_list) {
+Lexer* init_lexer(const char* filename, const char* src, ErrorList* error_list) {
     Lexer* lx = (Lexer*)malloc(sizeof(Lexer));
     if (!lx)
         return NULL;
     lx->errors = error_list;
     lx->src = src;
+    lx->filename = filename;
     lx->length = strlen(src);
     lx->pos = 0;
     lx->line = 1;

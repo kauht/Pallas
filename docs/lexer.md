@@ -1,7 +1,7 @@
-# Lexical Analysis in ADAN
+# Lexical Analysis in Pallas
 
 ## Purpose
-The purpose of lexical analysis in ADAN is to take in the source text and convert it into a stream of tokens to use for later stages. The lexer is only responsible for classifying and location tracking, not validating the programs structure.
+The purpose of lexical analysis in Pallas is to take in the source text and convert it into a stream of tokens to use for later stages. The lexer is only responsible for classifying and location tracking, not validating the programs structure.
 
 ---
 

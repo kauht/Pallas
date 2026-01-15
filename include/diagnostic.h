@@ -1,25 +1,28 @@
-#ifndef ERROR_H
-#define ERROR_H
+#ifndef DIAGNOSTIC_H
+#define DIAGNOSTIC_H
 
+#include <stdarg.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 typedef enum {
-    LEXER,
-    PARSER,
-    SEMANTIC,
-    CODEGEN,
-    GENERIC
-} Category;
-
-typedef enum {
-    INFO = 1,
-    WARNING,
-    ERROR,
-    CRITICAL
+    SEVERITY_INFO = 1,
+    SEVERITY_WARNING,
+    SEVERITY_ERROR,
+    SEVERITY_CRITICAL
 } Severity;
 
+typedef enum {
+    CATEGORY_LEXER = 0,
+    CATEGORY_PARSER,
+    CATEGORY_SEMANTIC,
+    CATEGORY_CODEGEN,
+    CATEGORY_GENERIC
+} Category;
+
 typedef struct {
-    const char* message;
+    char* filename;
+    char* message;
     size_t line;
     size_t column;
     size_t length;
@@ -28,18 +31,26 @@ typedef struct {
 } Error;
 
 typedef struct {
-    Error* errors;  // Heap allocated array of Error's
+    Error* items;
     size_t size;
     size_t capacity;
 } ErrorList;
 
-// Allocates, Creates, Initializes, and returns the initial error list pointer
-ErrorList* create_errors();
+ErrorList* errors_create(void);
+void errors_free(ErrorList* list);
+void errors_clear(ErrorList* list);
 
-/* Construct and push an error to the provided error list */
-ErrorList* push_error(ErrorList* error_list, const char* message, Severity severity, size_t line,
-                      size_t column, Category category);
+Error* errors_get(ErrorList* list, size_t index);
 
-void free_errors(ErrorList* error_list);
+bool errors_add(ErrorList* list, const char* filename, const char* message, Severity severity,
+                size_t line, size_t column, size_t length, Category category);
 
-#endif /* ERROR_H */
+bool errors_addf(ErrorList* list, const char* filename, Severity severity, size_t line,
+                 size_t column, size_t length, Category category, const char* fmt, ...);
+
+char* errors_format(const Error* e);
+
+const char* severity_to_string(Severity s);
+const char* category_to_string(Category c);
+
+#endif /* DIAGNOSTIC_H */

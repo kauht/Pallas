@@ -13,6 +13,7 @@ typedef enum {
 
     /* Keywords */
     TOKEN_IMPORT,
+    TOKEN_INCLUDE,
     TOKEN_IF,
     TOKEN_ELSE,
     TOKEN_FOR,
@@ -22,10 +23,15 @@ typedef enum {
     TOKEN_RETURN,
     TOKEN_STRUCT,
     TOKEN_CLASS,
+    TOKEN_PUBLIC,
+    TOKEN_PRIVATE,
+    TOKEN_NEW,
+    TOKEN_DELETE,
     TOKEN_TRUE,
     TOKEN_FALSE,
     TOKEN_NULL,
     TOKEN_CONST,
+    TOKEN_VOID,
 
     /* Literals */
     TOKEN_INT_LITERAL,
@@ -48,8 +54,10 @@ typedef enum {
     TOKEN_F64,
     TOKEN_INT,
     TOKEN_FLOAT,
+    TOKEN_DOUBLE,
     TOKEN_CHAR,
     TOKEN_STRING,
+    TOKEN_BOOL,
 
     /* Punctuation */
     TOKEN_LPAREN,    /* ( */
@@ -123,6 +131,7 @@ typedef struct {
 } Token;
 
 typedef struct {
+    const char* filename;
     const char* src;
 
     size_t length;
@@ -133,7 +142,7 @@ typedef struct {
     ErrorList* errors;
 } Lexer;
 
-Lexer* init_lexer(const char* src, ErrorList* error_list);
+Lexer* init_lexer(const char* filename, const char* src, ErrorList* error_list);
 Token* run_lexer(Lexer* lx, size_t* count);
 void free_lexer(Lexer* lx);
 

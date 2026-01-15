@@ -6,6 +6,32 @@
 
 /* ---------- utilities ---------- */
 
+/* Forward declaration */
+static const char* token_name(TokenType t);
+
+/* Print a single token in a nice format */
+static void print_token(const Token* t, size_t index) {
+    printf("  [%3zu] %-25s", index, token_name(t->type));
+    if (t->lexeme) {
+        printf(" '%s'", t->lexeme);
+    }
+    printf(" (line %zu, col %zu)\n", t->line, t->column);
+}
+
+/* Print all tokens in a pretty table */
+static void print_token_stream(const Token* tokens, size_t count) {
+    printf("\n");
+    printf("+========================================================================+\n");
+    printf("|                          TOKEN STREAM                                  |\n");
+    printf("+========================================================================+\n");
+    for (size_t i = 0; i < count; i++) {
+        printf("| ");
+        print_token(&tokens[i], i);
+    }
+    printf("+========================================================================+\n");
+    printf("\n");
+}
+
 static const char* token_name(TokenType t) {
     switch (t) {
         case TOKEN_EOF:
@@ -26,6 +52,8 @@ static const char* token_name(TokenType t) {
         /* Keywords */
         case TOKEN_IMPORT:
             return "TOKEN_IMPORT";
+        case TOKEN_INCLUDE:
+            return "TOKEN_INCLUDE";
         case TOKEN_IF:
             return "TOKEN_IF";
         case TOKEN_ELSE:
@@ -44,6 +72,14 @@ static const char* token_name(TokenType t) {
             return "TOKEN_STRUCT";
         case TOKEN_CLASS:
             return "TOKEN_CLASS";
+        case TOKEN_PUBLIC:
+            return "TOKEN_PUBLIC";
+        case TOKEN_PRIVATE:
+            return "TOKEN_PRIVATE";
+        case TOKEN_NEW:
+            return "TOKEN_NEW";
+        case TOKEN_DELETE:
+            return "TOKEN_DELETE";
         case TOKEN_TRUE:
             return "TOKEN_TRUE";
         case TOKEN_FALSE:
@@ -52,24 +88,42 @@ static const char* token_name(TokenType t) {
             return "TOKEN_NULL";
         case TOKEN_CONST:
             return "TOKEN_CONST";
+        case TOKEN_VOID:
+            return "TOKEN_VOID";
 
         /* Types */
         case TOKEN_INT:
             return "TOKEN_INT";
         case TOKEN_FLOAT:
             return "TOKEN_FLOAT";
+        case TOKEN_DOUBLE:
+            return "TOKEN_DOUBLE";
         case TOKEN_CHAR:
             return "TOKEN_CHAR";
         case TOKEN_STRING:
             return "TOKEN_STRING";
+        case TOKEN_BOOL:
+            return "TOKEN_BOOL";
+        case TOKEN_I8:
+            return "TOKEN_I8";
+        case TOKEN_I16:
+            return "TOKEN_I16";
         case TOKEN_I32:
             return "TOKEN_I32";
         case TOKEN_I64:
             return "TOKEN_I64";
+        case TOKEN_U8:
+            return "TOKEN_U8";
+        case TOKEN_U16:
+            return "TOKEN_U16";
         case TOKEN_U32:
             return "TOKEN_U32";
         case TOKEN_U64:
             return "TOKEN_U64";
+        case TOKEN_F8:
+            return "TOKEN_F8";
+        case TOKEN_F16:
+            return "TOKEN_F16";
         case TOKEN_F32:
             return "TOKEN_F32";
         case TOKEN_F64:
@@ -183,8 +237,9 @@ static int token_eq(Token* t, TokenType type, const char* lexeme) {
     return strcmp(t->lexeme, lexeme) == 0;
 }
 
+/* Lex source string for testing */
 static Token* lex_all(const char* src, size_t* out_count, ErrorList* el) {
-    Lexer* lx = init_lexer(src, el);
+    Lexer* lx = init_lexer("C:\\Users\\sam\\Desktop\\pallas\\examples\\pallas.pal", src, el);
     Token* tokens = run_lexer(lx, out_count);
     free_lexer(lx);
     return tokens;
@@ -209,38 +264,131 @@ static int run_test(const char* name, const char* src, const ExpectedToken* expe
     int pass = 1;
 
     if (count != expected_count) {
-        printf("[FAIL] %s\n  Expected %zu tokens, got %zu\n", name, expected_count, count);
+        printf("  \033[31;1m[FAIL]\033[0m %s\n", name);
+        printf("    Expected %zu tokens, got %zu\n", expected_count, count);
+        print_token_stream(tokens, count);
         pass = 0;
         goto done;
     }
 
     for (size_t i = 0; i < count; i++) {
         if (!token_eq(&tokens[i], expected[i].type, expected[i].lexeme)) {
-            printf("[FAIL] %s\n  Token %zu:\n    Expected: %s '%s'\n    Got:      %s '%s'\n", name,
-                   i, token_name(expected[i].type),
-                   expected[i].lexeme ? expected[i].lexeme : "NULL", token_name(tokens[i].type),
-                   tokens[i].lexeme ? tokens[i].lexeme : "NULL");
+            printf("  \033[31;1m[FAIL]\033[0m %s\n", name);
+            printf("    Token %zu mismatch:\n", i);
+            printf("      Expected: %s '%s'\n",
+                   token_name(expected[i].type), 
+                   expected[i].lexeme ? expected[i].lexeme : "(null)");
+            printf("      Got:      %s '%s'\n",
+                   token_name(tokens[i].type), 
+                   tokens[i].lexeme ? tokens[i].lexeme : "(null)");
+            print_token_stream(tokens, count);
             pass = 0;
             goto done;
         }
     }
 
     if (errors.size != expected_errors) {
-        printf("[FAIL] %s\n  Expected %zu errors, got %zu\n", name, expected_errors, errors.size);
+        printf("  \033[31;1m[FAIL]\033[0m %s\n", name);
+        printf("    Expected %zu diagnostics, got %zu\n", expected_errors, errors.size);
+        if (errors.size > 0) {
+            printf("    Diagnostics:\n");
+            for (size_t i = 0; i < errors.size; i++) {
+                char* formatted = errors_format(&errors.items[i]);
+                if (formatted) {
+                    printf("      %s\n", formatted);
+                    free(formatted);
+                }
+            }
+        }
         pass = 0;
     }
 
 done:
     if (pass)
-        printf("[PASS] %s\n", name);
+        printf("  \033[32;1m[PASS]\033[0m %s\n", name);
     free_tokens(tokens, count);
+    errors_clear(&errors);
     return pass;
 }
 
 /* ---------- individual test cases ---------- */
 
+/* Lex and print the example file */
+static void lex_example_file(void) {
+    const char* example_path = "C:\\Users\\sam\\Desktop\\pallas\\examples\\pallas.pal";
+    
+    printf("\n");
+    printf("+========================================================================+\n");
+    printf("|                      LEXING EXAMPLE FILE                               |\n");
+    printf("+------------------------------------------------------------------------+\n");
+    printf("| File: %-65s|\n", example_path);
+    printf("+========================================================================+\n");
+    
+    FILE* file = NULL;
+#ifdef _MSC_VER
+    errno_t err = fopen_s(&file, example_path, "rb");
+    if (err != 0 || !file) {
+#else
+    file = fopen(example_path, "rb");
+    if (!file) {
+#endif
+        printf("⚠ Could not open example file: %s\n", example_path);
+        printf("  Skipping example file tokenization.\n\n");
+        return;
+    }
+    
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+    
+    char* source = (char*)malloc(size + 1);
+    if (!source) {
+        printf("⚠ Failed to allocate memory for file content\n\n");
+        fclose(file);
+        return;
+    }
+    
+    fread(source, 1, size, file);
+    source[size] = '\0';
+    fclose(file);
+    
+    ErrorList errors = {0};
+    size_t count = 0;
+    Token* tokens = lex_all(source, &count, &errors);
+    
+    print_token_stream(tokens, count);
+    
+    if (errors.size > 0) {
+        printf("+========================================================================+\n");
+        printf("|                          DIAGNOSTICS                                   |\n");
+        printf("+------------------------------------------------------------------------+\n");
+        for (size_t i = 0; i < errors.size; i++) {
+            char* formatted = errors_format(&errors.items[i]);
+            if (formatted) {
+                printf("| %s\n", formatted);
+                free(formatted);
+            }
+        }
+        printf("+========================================================================+\n");
+        printf("\n");
+    }
+    
+    printf("Total tokens: %zu\n", count);
+    printf("Total diagnostics: %zu\n\n", errors.size);
+    
+    free_tokens(tokens, count);
+    errors_clear(&errors);
+    free(source);
+}
+
 void run_lexer_tests(void) {
     int passed = 0, total = 0;
+    
+    printf("\n");
+    printf("+========================================================================+\n");
+    printf("|                          LEXER TEST SUITE                              |\n");
+    printf("+========================================================================+\n");
+    printf("\n");
 
     /* --------------- Test 1: Keywords --------------- */
     {
@@ -260,12 +408,13 @@ void run_lexer_tests(void) {
     /* --------------- Test 2: Types --------------- */
     {
         const ExpectedToken exp[] = {
-            {TOKEN_INT, "int"},       {TOKEN_FLOAT, "float"}, {TOKEN_CHAR, "char"},
-            {TOKEN_STRING, "string"}, {TOKEN_I32, "i32"},     {TOKEN_I64, "i64"},
-            {TOKEN_U32, "u32"},       {TOKEN_U64, "u64"},     {TOKEN_F32, "f32"},
-            {TOKEN_F64, "f64"},       {TOKEN_EOF, NULL},
+            {TOKEN_INT, "int"},       {TOKEN_FLOAT, "float"},   {TOKEN_DOUBLE, "double"},
+            {TOKEN_CHAR, "char"},     {TOKEN_STRING, "string"}, {TOKEN_BOOL, "bool"},
+            {TOKEN_I32, "i32"},       {TOKEN_I64, "i64"},       {TOKEN_U32, "u32"},
+            {TOKEN_U64, "u64"},       {TOKEN_F32, "f32"},       {TOKEN_F64, "f64"},
+            {TOKEN_EOF, NULL},
         };
-        const char* src = "int float char string i32 i64 u32 u64 f32 f64";
+        const char* src = "int float double char string bool i32 i64 u32 u64 f32 f64";
         total++;
         passed += run_test("Types", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
     }
@@ -423,9 +572,369 @@ void run_lexer_tests(void) {
         passed += run_test("Type Declarations", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
     }
 
-    printf("\nLexer tests: %d / %d passed\n", passed, total);
+    /* --------------- Test 12: Variadic Functions --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "printf"},  {TOKEN_LPAREN, "("},     {TOKEN_IDENT, "fmt"},
+            {TOKEN_COLON, ":"},       {TOKEN_IDENT, "str"},    {TOKEN_COMMA, ","},
+            {TOKEN_ELLIPSIS, "..."},  {TOKEN_RPAREN, ")"},     {TOKEN_LBRACE, "{"},
+            {TOKEN_RBRACE, "}"},      {TOKEN_EOF, NULL},
+        };
+        const char* src = "printf(fmt: str, ...) {}";
+        total++;
+        passed += run_test("Variadic Functions", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 13: Struct Declaration --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_STRUCT, "struct"}, {TOKEN_IDENT, "Point"},  {TOKEN_LBRACE, "{"},
+            {TOKEN_IDENT, "x"},       {TOKEN_COLON, ":"},      {TOKEN_I32, "i32"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_IDENT, "y"},      {TOKEN_COLON, ":"},
+            {TOKEN_I32, "i32"},       {TOKEN_SEMICOLON, ";"},  {TOKEN_RBRACE, "}"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "struct Point { x: i32; y: i32; }";
+        total++;
+        passed += run_test("Struct Declaration", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 14: Class Declaration --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_CLASS, "class"},   {TOKEN_IDENT, "Vec3"},   {TOKEN_LBRACE, "{"},
+            {TOKEN_IDENT, "x"},       {TOKEN_COLON, ":"},      {TOKEN_F32, "f32"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_RBRACE, "}"},     {TOKEN_EOF, NULL},
+        };
+        const char* src = "class Vec3 { x: f32; }";
+        total++;
+        passed += run_test("Class Declaration", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 15: Pointer Types --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "ptr"},     {TOKEN_COLON, ":"},      {TOKEN_I32, "i32"},
+            {TOKEN_STAR, "*"},        {TOKEN_STAR, "*"},       {TOKEN_SEMICOLON, ";"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "ptr: i32**;";
+        total++;
+        passed += run_test("Pointer Types", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 16: If-Else Statement --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IF, "if"},         {TOKEN_LPAREN, "("},     {TOKEN_IDENT, "x"},
+            {TOKEN_GREATER, ">"},     {TOKEN_INT_LITERAL, "0"}, {TOKEN_RPAREN, ")"},
+            {TOKEN_LBRACE, "{"},      {TOKEN_RBRACE, "}"},     {TOKEN_ELSE, "else"},
+            {TOKEN_LBRACE, "{"},      {TOKEN_RBRACE, "}"},     {TOKEN_EOF, NULL},
+        };
+        const char* src = "if (x > 0) {} else {}";
+        total++;
+        passed += run_test("If-Else Statement", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 17: While Loop --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_WHILE, "while"},   {TOKEN_LPAREN, "("},     {TOKEN_TRUE, "true"},
+            {TOKEN_RPAREN, ")"},      {TOKEN_LBRACE, "{"},     {TOKEN_BREAK, "break"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_RBRACE, "}"},     {TOKEN_EOF, NULL},
+        };
+        const char* src = "while (true) { break; }";
+        total++;
+        passed += run_test("While Loop", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 18: For Loop --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_FOR, "for"},       {TOKEN_LPAREN, "("},     {TOKEN_IDENT, "i"},
+            {TOKEN_COLON, ":"},       {TOKEN_I32, "i32"},      {TOKEN_ASSIGN, "="},
+            {TOKEN_INT_LITERAL, "0"}, {TOKEN_SEMICOLON, ";"},  {TOKEN_IDENT, "i"},
+            {TOKEN_LESS, "<"},        {TOKEN_INT_LITERAL, "10"}, {TOKEN_SEMICOLON, ";"},
+            {TOKEN_IDENT, "i"},       {TOKEN_PLUS_PLUS, "++"}, {TOKEN_RPAREN, ")"},
+            {TOKEN_LBRACE, "{"},      {TOKEN_RBRACE, "}"},     {TOKEN_EOF, NULL},
+        };
+        const char* src = "for (i: i32 = 0; i < 10; i++) {}";
+        total++;
+        passed += run_test("For Loop", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 19: Return Statement --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_RETURN, "return"}, {TOKEN_INT_LITERAL, "42"}, {TOKEN_SEMICOLON, ";"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "return 42;";
+        total++;
+        passed += run_test("Return Statement", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 20: Import Statement --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IMPORT, "import"}, {TOKEN_IDENT, "std"},    {TOKEN_DOT, "."},
+            {TOKEN_IDENT, "io"},      {TOKEN_SEMICOLON, ";"},  {TOKEN_EOF, NULL},
+        };
+        const char* src = "import std.io;";
+        total++;
+        passed += run_test("Import Statement", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 21: Function with Return Type --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "add"},     {TOKEN_LPAREN, "("},     {TOKEN_IDENT, "a"},
+            {TOKEN_COLON, ":"},       {TOKEN_I32, "i32"},      {TOKEN_COMMA, ","},
+            {TOKEN_IDENT, "b"},       {TOKEN_COLON, ":"},      {TOKEN_I32, "i32"},
+            {TOKEN_RPAREN, ")"},      {TOKEN_COLON, ":"},      {TOKEN_I32, "i32"},
+            {TOKEN_LBRACE, "{"},      {TOKEN_RETURN, "return"}, {TOKEN_IDENT, "a"},
+            {TOKEN_PLUS, "+"},        {TOKEN_IDENT, "b"},      {TOKEN_SEMICOLON, ";"},
+            {TOKEN_RBRACE, "}"},      {TOKEN_EOF, NULL},
+        };
+        const char* src = "add(a: i32, b: i32): i32 { return a + b; }";
+        total++;
+        passed += run_test("Function with Return Type", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 22: Const Variables --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_CONST, "const"},   {TOKEN_IDENT, "PI"},     {TOKEN_COLON, ":"},
+            {TOKEN_F32, "f32"},       {TOKEN_ASSIGN, "="},     {TOKEN_FLOAT_LITERAL, "3.14"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_EOF, NULL},
+        };
+        const char* src = "const PI: f32 = 3.14;";
+        total++;
+        passed += run_test("Const Variables", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 23: Boolean Literals --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "flag"},    {TOKEN_COLON, ":"},      {TOKEN_BOOL, "bool"},
+            {TOKEN_ASSIGN, "="},      {TOKEN_TRUE, "true"},    {TOKEN_SEMICOLON, ";"},
+            {TOKEN_IDENT, "other"},   {TOKEN_COLON, ":"},      {TOKEN_BOOL, "bool"},
+            {TOKEN_ASSIGN, "="},      {TOKEN_FALSE, "false"},  {TOKEN_SEMICOLON, ";"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "flag: bool = true; other: bool = false;";
+        total++;
+        passed += run_test("Boolean Literals", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 24: Logical Operators --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "result"},  {TOKEN_ASSIGN, "="},     {TOKEN_IDENT, "a"},
+            {TOKEN_LOGICAL_AND, "&&"}, {TOKEN_IDENT, "b"},     {TOKEN_LOGICAL_OR, "||"},
+            {TOKEN_IDENT, "c"},       {TOKEN_SEMICOLON, ";"},  {TOKEN_EOF, NULL},
+        };
+        const char* src = "result = a && b || c;";
+        total++;
+        passed += run_test("Logical Operators", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 25: Bitwise Operators --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "x"},       {TOKEN_ASSIGN, "="},     {TOKEN_IDENT, "a"},
+            {TOKEN_AMPERSAND, "&"},   {TOKEN_IDENT, "b"},      {TOKEN_PIPE, "|"},
+            {TOKEN_IDENT, "c"},       {TOKEN_CARET, "^"},      {TOKEN_IDENT, "d"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_EOF, NULL},
+        };
+        const char* src = "x = a & b | c ^ d;";
+        total++;
+        passed += run_test("Bitwise Operators", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 26: Shift Operators --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "x"},       {TOKEN_ASSIGN, "="},     {TOKEN_IDENT, "a"},
+            {TOKEN_LEFT_SHIFT, "<<"}, {TOKEN_INT_LITERAL, "5"}, {TOKEN_SEMICOLON, ";"},
+            {TOKEN_IDENT, "y"},       {TOKEN_ASSIGN, "="},     {TOKEN_IDENT, "b"},
+            {TOKEN_RIGHT_SHIFT, ">>"}, {TOKEN_INT_LITERAL, "3"}, {TOKEN_SEMICOLON, ";"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "x = a << 5; y = b >> 3;";
+        total++;
+        passed += run_test("Shift Operators", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 27: Continue Statement --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_WHILE, "while"},   {TOKEN_LPAREN, "("},     {TOKEN_TRUE, "true"},
+            {TOKEN_RPAREN, ")"},      {TOKEN_LBRACE, "{"},     {TOKEN_CONTINUE, "continue"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_RBRACE, "}"},     {TOKEN_EOF, NULL},
+        };
+        const char* src = "while (true) { continue; }";
+        total++;
+        passed += run_test("Continue Statement", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 28: Null Literal --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "ptr"},     {TOKEN_COLON, ":"},      {TOKEN_I32, "i32"},
+            {TOKEN_STAR, "*"},        {TOKEN_ASSIGN, "="},     {TOKEN_NULL, "null"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_EOF, NULL},
+        };
+        const char* src = "ptr: i32* = null;";
+        total++;
+        passed += run_test("Null Literal", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 29: All Sized Integer Types --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "a"},       {TOKEN_COLON, ":"},      {TOKEN_I8, "i8"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_IDENT, "b"},      {TOKEN_COLON, ":"},
+            {TOKEN_I16, "i16"},       {TOKEN_SEMICOLON, ";"},  {TOKEN_IDENT, "c"},
+            {TOKEN_COLON, ":"},       {TOKEN_U8, "u8"},        {TOKEN_SEMICOLON, ";"},
+            {TOKEN_IDENT, "d"},       {TOKEN_COLON, ":"},      {TOKEN_U16, "u16"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_EOF, NULL},
+        };
+        const char* src = "a: i8; b: i16; c: u8; d: u16;";
+        total++;
+        passed += run_test("All Sized Integer Types", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 30: Arrow Operator --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "ptr"},     {TOKEN_ARROW, "->"},     {TOKEN_IDENT, "field"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_EOF, NULL},
+        };
+        const char* src = "ptr->field;";
+        total++;
+        passed += run_test("Arrow Operator", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 31: Public/Private Keywords --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_CLASS, "class"},   {TOKEN_IDENT, "MyClass"}, {TOKEN_LBRACE, "{"},
+            {TOKEN_PUBLIC, "public"}, {TOKEN_IDENT, "x"},      {TOKEN_COLON, ":"},
+            {TOKEN_I32, "i32"},       {TOKEN_SEMICOLON, ";"},  {TOKEN_PRIVATE, "private"},
+            {TOKEN_IDENT, "y"},       {TOKEN_COLON, ":"},      {TOKEN_I32, "i32"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_RBRACE, "}"},     {TOKEN_EOF, NULL},
+        };
+        const char* src = "class MyClass { public x: i32; private y: i32; }";
+        total++;
+        passed += run_test("Public/Private Keywords", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 32: Constructor --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "MyClass"}, {TOKEN_LPAREN, "("},     {TOKEN_RPAREN, ")"},
+            {TOKEN_LBRACE, "{"},      {TOKEN_RBRACE, "}"},     {TOKEN_EOF, NULL},
+        };
+        const char* src = "MyClass() {}";
+        total++;
+        passed += run_test("Constructor", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 33: Destructor --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_TILDE, "~"},       {TOKEN_IDENT, "MyClass"}, {TOKEN_LPAREN, "("},
+            {TOKEN_RPAREN, ")"},      {TOKEN_LBRACE, "{"},     {TOKEN_RBRACE, "}"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "~MyClass() {}";
+        total++;
+        passed += run_test("Destructor", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 34: New/Delete Keywords --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "ptr"},     {TOKEN_COLON, ":"},      {TOKEN_I32, "i32"},
+            {TOKEN_STAR, "*"},        {TOKEN_ASSIGN, "="},     {TOKEN_NEW, "new"},
+            {TOKEN_LPAREN, "("},      {TOKEN_I32, "i32"},      {TOKEN_RPAREN, ")"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_DELETE, "delete"}, {TOKEN_LPAREN, "("},
+            {TOKEN_IDENT, "ptr"},     {TOKEN_RPAREN, ")"},     {TOKEN_SEMICOLON, ";"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "ptr: i32* = new(i32); delete(ptr);";
+        total++;
+        passed += run_test("New/Delete Keywords", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 35: Void Type --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "func"},    {TOKEN_LPAREN, "("},     {TOKEN_RPAREN, ")"},
+            {TOKEN_COLON, ":"},       {TOKEN_VOID, "void"},    {TOKEN_LBRACE, "{"},
+            {TOKEN_RBRACE, "}"},      {TOKEN_EOF, NULL},
+        };
+        const char* src = "func(): void {}";
+        total++;
+        passed += run_test("Void Type", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 36: Method Call with Dot --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "obj"},     {TOKEN_DOT, "."},        {TOKEN_IDENT, "method"},
+            {TOKEN_LPAREN, "("},      {TOKEN_RPAREN, ")"},     {TOKEN_SEMICOLON, ";"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "obj.method();";
+        total++;
+        passed += run_test("Method Call with Dot", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 37: Compound Assignment Operators --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "x"},       {TOKEN_PLUS_ASSIGN, "+="}, {TOKEN_INT_LITERAL, "5"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_IDENT, "y"},      {TOKEN_MINUS_ASSIGN, "-="},
+            {TOKEN_INT_LITERAL, "3"}, {TOKEN_SEMICOLON, ";"},  {TOKEN_IDENT, "z"},
+            {TOKEN_STAR_ASSIGN, "*="}, {TOKEN_INT_LITERAL, "2"}, {TOKEN_SEMICOLON, ";"},
+            {TOKEN_IDENT, "w"},       {TOKEN_SLASH_ASSIGN, "/="}, {TOKEN_INT_LITERAL, "4"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_EOF, NULL},
+        };
+        const char* src = "x += 5; y -= 3; z *= 2; w /= 4;";
+        total++;
+        passed += run_test("Compound Assignment Operators", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 38: Object Instantiation --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "MyClass"}, {TOKEN_IDENT, "obj"},    {TOKEN_LPAREN, "("},
+            {TOKEN_RPAREN, ")"},      {TOKEN_SEMICOLON, ";"},  {TOKEN_EOF, NULL},
+        };
+        const char* src = "MyClass obj();";
+        total++;
+        passed += run_test("Object Instantiation", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* Print results */
+    printf("\n");
+    printf("+========================================================================+\n");
+    printf("|                           TEST RESULTS                                 |\n");
+    printf("+------------------------------------------------------------------------+\n");
+    if (passed == total) {
+        printf("|  \033[32;1m[PASS]\033[0m All tests passed! (%d/%d)                                 |\n", passed, total);
+    } else {
+        printf("|  \033[31;1m[FAIL]\033[0m Some tests failed: \033[32;1m%d\033[0m/\033[31;1m%d\033[0m passed                       |\n", passed, total);
+    }
+    printf("+========================================================================+\n");
+    printf("\n");
+
     if (passed != total) {
-        printf("Some tests failed. Fix your lexer!\n");
         exit(1);
     }
+    
+    /* Now lex and display the example file */
+    lex_example_file();
 }

@@ -7,6 +7,8 @@
 #include "diagnostic.h"
 
 typedef struct Parser {
+    const char* filename;
+
     Token* tokens;
     uint32_t current;
     uint32_t count;
@@ -53,7 +55,8 @@ typedef struct Type {
     uint32_t param_count;
 } Type;
 
-Parser* init_parser(Token* tks, uint32_t count, ErrorList* error_list);
+
+Parser* init_parser(const char* filename, Token* tks, uint32_t count, ErrorList* error_list);
 
 ASTNode* run_parser(Parser* parser);
 

@@ -1,0 +1,30 @@
+include something.cool;
+
+class Name {
+    public:
+    method(str: string): string {
+        return str;
+    }
+
+    Name() {
+        println("Object constructed");
+    }
+    ~Name() {
+        println("Object destroyed");
+    }
+};
+
+main(): i32 {
+    var: i32 = 50;
+    s: string = "yo";
+
+    for (i: i32 = 0; i < 10; i++) {
+        s += to_string(i);
+    }
+    println(s);
+
+    name: Name = Name(); // Should print "Object constructed"
+    print(name.method("wsg")); // Should print "wsg"
+
+}
+// Should print "Object destroyed"
