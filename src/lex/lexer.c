@@ -140,7 +140,7 @@ static void skip_untracked(Lexer* lx) {
                 next_char(lx);
                 next_char(lx);
             } else {
-                push_error(lx->errors, "Unterminated block comment", ERROR, lx->line, lx->column, LEXER);
+                errors_add(lx->errors, NULL, "Unterminated block comment", SEVERITY_ERROR, lx->line, lx->column, 0, CATEGORY_LEXER);
             }
             continue;
         }

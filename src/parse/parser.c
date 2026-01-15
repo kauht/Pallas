@@ -91,19 +91,19 @@ static ASTNode* parse_import(Parser* parser) {
         return NULL;
     }
     if (advance(parser).type != TOKEN_IDENT) {
-        push_error(parser->errors, "Expected TOKEN_IDENT", ERROR, previous(parser).line,
-                   previous(parser).column, PARSER);
+        errors_add(parser->errors, NULL, "Expected TOKEN_IDENT", SEVERITY_ERROR, previous(parser).line,
+                   previous(parser).column, 0, CATEGORY_PARSER);
         synchronize(parser);
     }
     while (1) {
         if (advance(parser).type != TOKEN_DOT) {
-            push_error(parser->errors, "Expected TOKEN_IDENT", ERROR, previous(parser).line,
-                       previous(parser).column, PARSER);
+            errors_add(parser->errors, NULL, "Expected TOKEN_IDENT", SEVERITY_ERROR, previous(parser).line,
+                       previous(parser).column, 0, CATEGORY_PARSER);
             synchronize(parser);
         }
         if (advance(parser).type != TOKEN_IDENT) {
-            push_error(parser->errors, "Expected TOKEN_IDENT", ERROR, previous(parser).line,
-                       previous(parser).column, PARSER);
+            errors_add(parser->errors, NULL, "Expected TOKEN_IDENT", SEVERITY_ERROR, previous(parser).line,
+                       previous(parser).column, 0, CATEGORY_PARSER);
             synchronize(parser);
         }
         if (advance(parser).type == TOKEN_SEMICOLON) {
@@ -232,9 +232,9 @@ static ASTNode* parse_primary(Parser* parser) {
         consume(parser);
         parse_expression(parser);
         if (peek(parser).type != TOKEN_RPAREN) {
-            push_error(parser->errors, "Expected Expression", ERROR,
+            errors_add(parser->errors, NULL, "Expected Expression", SEVERITY_ERROR,
                        parser->tokens[parser->current].line, parser->tokens[parser->current].column,
-                       PARSER);
+                       0, CATEGORY_PARSER);
             synchronize(parser);
             return create_ast_node(AST_UNKNOWN, parser->tokens[parser->current].line,
                                    parser->tokens[parser->current].column);
@@ -281,11 +281,12 @@ static ASTNode* parse_program(Parser* parser) {
 
 /* Main Functions */
 
-Parser* init_parser(Token* tks, uint32_t count, ErrorList* error_list) {
+Parser* init_parser(const char* filename, Token* tks, uint32_t count, ErrorList* error_list) {
     Parser* parser = (Parser*)malloc(sizeof(Parser));
     if (!parser) {
         return NULL;
     }
+    parser->filename = filename;
     parser->errors = error_list;
     parser->count = count;
     parser->panic = false;
