@@ -1,0 +1,117 @@
+(* PROGRAM STRUCTURE *)
+Program ::= { ImportDecl } { TopDecl }
+
+(* IMPORTS *)
+ImportDecl ::= 'import' ImportPath ';'
+ImportPath ::= ( '.' '/' | '..' '/' )? TOKEN_IDENT { '/' TOKEN_IDENT }
+
+(* TOP-LEVEL DECLARATIONS *)
+TopDecl ::= FunDecl | StructDecl | ClassDecl | VarDecl | EnumDecl
+
+(* TYPES - Fixed left-recursion *)
+Type ::= BaseType { TypeSuffix }
+BaseType ::= BuiltinType | UserType | 'void' | '(' Type ')'
+TypeSuffix ::= '*' | '[' [ Expression ] ']'
+
+BuiltinType ::= 'int' | 'float' | 'double' | 'bool' | 'char' | 'string' | SizedType
+SizedType ::= 'i8' | 'i16' | 'i32' | 'i64'
+            | 'u8' | 'u16' | 'u32' | 'u64'
+            | 'f8' | 'f16' | 'f32' | 'f64'
+
+UserType ::= TOKEN_IDENT
+
+(* FUNCTION DECLARATIONS *)
+FunDecl ::= TOKEN_IDENT '(' [ ParamList ] ')' [ ':' Type ] Block
+ParamList ::= Param { ',' Param } [ ',' '...' ]
+Param ::= TOKEN_IDENT ':' Type
+
+(* STRUCT DECLARATIONS *)
+StructDecl ::= 'struct' TOKEN_IDENT '{' { StructMember } '}'
+StructMember ::= VarDecl  (* Structs can only have data members *)
+
+(* CLASS DECLARATIONS *)
+ClassDecl ::= 'class' TOKEN_IDENT '{' { ClassMember } '}'
+ClassMember ::= AccessLabel | VarDecl | MethodDecl | ConstructorDecl | DestructorDecl
+AccessLabel ::= ( 'public' | 'private' ) ':'
+MethodDecl ::= TOKEN_IDENT '(' [ ParamList ] ')' [ ':' Type ] Block
+ConstructorDecl ::= TOKEN_IDENT '(' [ ParamList ] ')' Block
+DestructorDecl ::= '~' TOKEN_IDENT '(' ')' Block
+
+(* VARIABLE DECLARATIONS *)
+VarDecl ::= [ 'const' ] TOKEN_IDENT ':' Type [ '=' Expression ] ';'
+
+(* ENUM DECLARATIONS *)
+EnumDecl ::= 'enum' TOKEN_IDENT '{' EnumMember { ',' EnumMember } [ ',' ] '}'
+EnumMember ::= TOKEN_IDENT [ '=' Expression ] | TOKEN_IDENT '(' [ ParamList ] ')'
+
+(* STATEMENTS *)
+Statement ::= IfStmt | WhileStmt | ForStmt | MatchStmt | ReturnStmt
+            | BreakStmt | ContinueStmt | ExpressionStmt
+            | Block | VarDecl
+
+IfStmt ::= 'if' '(' Expression ')' Statement [ 'else' Statement ]
+WhileStmt ::= 'while' '(' Expression ')' Statement
+ForStmt ::= 'for' '(' ( VarDecl | ExpressionStmt | ';' )
+            [ Expression ] ';' [ Expression ] ')' Statement
+
+(* PATTERN MATCHING *)
+MatchStmt ::= 'match' '(' Expression ')' '{' { MatchCase } '}'
+MatchCase ::= Pattern [ 'if' Expression ] '=>' Statement
+Pattern ::= LiteralPattern | WildcardPattern | IdentifierPattern
+          | EnumPattern | StructPattern | ArrayPattern | OrPattern | TypePattern
+LiteralPattern ::= TOKEN_INT_LITERAL | TOKEN_FLOAT_LITERAL | TOKEN_CHAR_LITERAL
+                 | TOKEN_STRING_LITERAL | 'true' | 'false' | 'null'
+WildcardPattern ::= '_'
+IdentifierPattern ::= TOKEN_IDENT
+EnumPattern ::= TOKEN_IDENT '::' TOKEN_IDENT [ '(' [ PatternList ] ')' ]
+StructPattern ::= TOKEN_IDENT '{' [ FieldPatternList ] '}'
+FieldPatternList ::= FieldPattern { ',' FieldPattern } [ ',' ]
+FieldPattern ::= TOKEN_IDENT [ ':' Pattern ]
+ArrayPattern ::= '[' [ PatternList ] ']'
+PatternList ::= Pattern { ',' Pattern } [ ',' '...' TOKEN_IDENT ]
+OrPattern ::= Pattern { '|' Pattern }
+TypePattern ::= TOKEN_IDENT ':' Type
+
+ReturnStmt ::= 'return' [ Expression ] ';'
+BreakStmt ::= 'break' ';'
+ContinueStmt ::= 'continue' ';'
+ExpressionStmt ::= Expression ';'
+Block ::= '{' { Statement } '}'
+
+(* EXPRESSIONS *)
+Expression ::= Assignment
+Assignment ::= Conditional [ AssignmentOp Assignment ]
+AssignmentOp ::= '=' | '+=' | '-=' | '*=' | '/=' | '%='
+               | '&=' | '|=' | '^=' | '<<=' | '>>='
+
+Conditional ::= LogicalOr [ '?' Expression ':' Conditional ]
+LogicalOr ::= LogicalAnd { '||' LogicalAnd }
+LogicalAnd ::= BitwiseOr { '&&' BitwiseOr }
+BitwiseOr ::= BitwiseXor { '|' BitwiseXor }
+BitwiseXor ::= BitwiseAnd { '^' BitwiseAnd }
+BitwiseAnd ::= Equality { '&' Equality }
+Equality ::= Comparison { ( '==' | '!=' ) Comparison }
+Comparison ::= Shift { ( '<' | '<=' | '>' | '>=' ) Shift }
+Shift ::= Additive { ( '<<' | '>>' ) Additive }
+Additive ::= Multiplicative { ( '+' | '-' ) Multiplicative }
+Multiplicative ::= Cast { ( '*' | '/' | '%' ) Cast }
+Cast ::= '(' Type ')' Cast | Unary
+Unary ::= PrefixOp Unary | Postfix
+PrefixOp ::= '++' | '--' | '!' | '-' | '~' | '&' | '*'
+Postfix ::= Primary { PostfixOp }
+PostfixOp ::= '++' | '--' | '(' [ ArgumentList ] ')'
+            | '[' Expression ']' | '.' TOKEN_IDENT | '->' TOKEN_IDENT
+ArgumentList ::= Expression { ',' Expression }
+
+Primary ::= TOKEN_IDENT
+          | TOKEN_INT_LITERAL | TOKEN_FLOAT_LITERAL
+          | TOKEN_CHAR_LITERAL | TOKEN_STRING_LITERAL
+          | 'true' | 'false' | 'null'
+          | '(' Expression ')'
+          | NewExpression | DeleteExpression
+
+(* STRING INTERPOLATION - handled in lexer via TOKEN_STRING_LITERAL *)
+(* Strings can contain ${expression} for interpolation *)
+
+NewExpression ::= 'new' Type [ '(' [ ArgumentList ] ')' ]
+DeleteExpression ::= 'delete' Expression
