@@ -32,6 +32,8 @@ typedef enum {
     TOKEN_NULL,
     TOKEN_CONST,
     TOKEN_VOID,
+    TOKEN_MATCH,
+    TOKEN_ENUM,
 
     /* Literals */
     TOKEN_INT_LITERAL,
@@ -71,8 +73,10 @@ typedef enum {
     TOKEN_COLON,     /* : */
     TOKEN_DOT,       /* . */
     TOKEN_ELLIPSIS,  /* ... */
-    TOKEN_QUESTION,  /* ? */
-    TOKEN_AT,        /* @ */
+    TOKEN_QUESTION,     /* ? */
+    TOKEN_AT,           /* @ */
+    TOKEN_DOUBLE_COLON, /* :: */
+    TOKEN_FAT_ARROW,    /* => */
 
     /* Assignment / Arrow */
     TOKEN_ASSIGN,      /* = */

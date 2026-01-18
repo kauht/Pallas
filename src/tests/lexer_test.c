@@ -90,6 +90,10 @@ static const char* token_name(TokenType t) {
             return "TOKEN_CONST";
         case TOKEN_VOID:
             return "TOKEN_VOID";
+        case TOKEN_MATCH:
+            return "TOKEN_MATCH";
+        case TOKEN_ENUM:
+            return "TOKEN_ENUM";
 
         /* Types */
         case TOKEN_INT:
@@ -218,6 +222,10 @@ static const char* token_name(TokenType t) {
             return "TOKEN_COMMA";
         case TOKEN_COLON:
             return "TOKEN_COLON";
+        case TOKEN_DOUBLE_COLON:
+            return "TOKEN_DOUBLE_COLON";
+        case TOKEN_FAT_ARROW:
+            return "TOKEN_FAT_ARROW";
         case TOKEN_QUESTION:
             return "TOKEN_QUESTION";
         case TOKEN_AT:
@@ -916,6 +924,108 @@ void run_lexer_tests(void) {
         const char* src = "MyClass obj();";
         total++;
         passed += run_test("Object Instantiation", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 39: Match Keyword --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_MATCH, "match"},   {TOKEN_LPAREN, "("},     {TOKEN_IDENT, "x"},
+            {TOKEN_RPAREN, ")"},      {TOKEN_LBRACE, "{"},     {TOKEN_RBRACE, "}"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "match (x) {}";
+        total++;
+        passed += run_test("Match Keyword", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 40: Enum Declaration --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_ENUM, "enum"},     {TOKEN_IDENT, "Color"},  {TOKEN_LBRACE, "{"},
+            {TOKEN_IDENT, "Red"},     {TOKEN_COMMA, ","},      {TOKEN_IDENT, "Green"},
+            {TOKEN_COMMA, ","},       {TOKEN_IDENT, "Blue"},   {TOKEN_RBRACE, "}"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "enum Color { Red, Green, Blue }";
+        total++;
+        passed += run_test("Enum Declaration", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 41: Double Colon Operator --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "Color"},   {TOKEN_DOUBLE_COLON, "::"}, {TOKEN_IDENT, "Red"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_EOF, NULL},
+        };
+        const char* src = "Color::Red;";
+        total++;
+        passed += run_test("Double Colon Operator", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 42: Fat Arrow Operator --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "x"},       {TOKEN_FAT_ARROW, "=>"}, {TOKEN_IDENT, "y"},
+            {TOKEN_SEMICOLON, ";"},   {TOKEN_EOF, NULL},
+        };
+        const char* src = "x => y;";
+        total++;
+        passed += run_test("Fat Arrow Operator", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 43: Pattern Match with Enum --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_MATCH, "match"},   {TOKEN_LPAREN, "("},     {TOKEN_IDENT, "shape"},
+            {TOKEN_RPAREN, ")"},      {TOKEN_LBRACE, "{"},     {TOKEN_IDENT, "Shape"},
+            {TOKEN_DOUBLE_COLON, "::"}, {TOKEN_IDENT, "Circle"}, {TOKEN_LPAREN, "("},
+            {TOKEN_IDENT, "r"},       {TOKEN_RPAREN, ")"},     {TOKEN_FAT_ARROW, "=>"},
+            {TOKEN_LBRACE, "{"},      {TOKEN_RBRACE, "}"},     {TOKEN_RBRACE, "}"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "match (shape) { Shape::Circle(r) => {} }";
+        total++;
+        passed += run_test("Pattern Match with Enum", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 44: Enum with Data --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_ENUM, "enum"},     {TOKEN_IDENT, "Option"}, {TOKEN_LBRACE, "{"},
+            {TOKEN_IDENT, "Some"},    {TOKEN_LPAREN, "("},     {TOKEN_IDENT, "value"},
+            {TOKEN_COLON, ":"},       {TOKEN_I32, "i32"},      {TOKEN_RPAREN, ")"},
+            {TOKEN_COMMA, ","},       {TOKEN_IDENT, "None"},   {TOKEN_RBRACE, "}"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "enum Option { Some(value: i32), None }";
+        total++;
+        passed += run_test("Enum with Data", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 45: Wildcard Pattern --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_IDENT, "_"},       {TOKEN_FAT_ARROW, "=>"}, {TOKEN_LBRACE, "{"},
+            {TOKEN_RBRACE, "}"},      {TOKEN_EOF, NULL},
+        };
+        const char* src = "_ => {}";
+        total++;
+        passed += run_test("Wildcard Pattern", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
+    }
+
+    /* --------------- Test 46: Complete Match Statement --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_MATCH, "match"},   {TOKEN_LPAREN, "("},     {TOKEN_IDENT, "color"},
+            {TOKEN_RPAREN, ")"},      {TOKEN_LBRACE, "{"},     {TOKEN_IDENT, "Color"},
+            {TOKEN_DOUBLE_COLON, "::"}, {TOKEN_IDENT, "Red"},  {TOKEN_PIPE, "|"},
+            {TOKEN_IDENT, "Color"},   {TOKEN_DOUBLE_COLON, "::"}, {TOKEN_IDENT, "Blue"},
+            {TOKEN_FAT_ARROW, "=>"},  {TOKEN_LBRACE, "{"},     {TOKEN_RBRACE, "}"},
+            {TOKEN_RBRACE, "}"},      {TOKEN_EOF, NULL},
+        };
+        const char* src = "match (color) { Color::Red | Color::Blue => {} }";
+        total++;
+        passed += run_test("Complete Match Statement", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
     }
 
     /* Print results */

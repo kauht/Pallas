@@ -30,6 +30,8 @@ static const struct {
     {"null", TOKEN_NULL},
     {"const", TOKEN_CONST},
     {"void", TOKEN_VOID},
+    {"match", TOKEN_MATCH},
+    {"enum", TOKEN_ENUM},
 
     /* Types */
     {"int", TOKEN_INT},
@@ -375,8 +377,15 @@ static Token lex_operator(Lexer* lx) {
             return make_token(lx, TOKEN_SEMICOLON, start, length, lexeme);
         case ',':
             return make_token(lx, TOKEN_COMMA, start, length, lexeme);
-        case ':':
+        case ':': {
+            if (match_char(lx, ':')) {
+                lexeme[1] = ':';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_DOUBLE_COLON, start, length, lexeme);
+            }
             return make_token(lx, TOKEN_COLON, start, length, lexeme);
+        }
         case '?':
             return make_token(lx, TOKEN_QUESTION, start, length, lexeme);
         case '@':
@@ -467,6 +476,12 @@ static Token lex_operator(Lexer* lx) {
                 lexeme[2] = '\0';
                 length = 2;
                 return make_token(lx, TOKEN_EQUAL, start, length, lexeme);
+            }
+            if (match_char(lx, '>')) {
+                lexeme[1] = '>';
+                lexeme[2] = '\0';
+                length = 2;
+                return make_token(lx, TOKEN_FAT_ARROW, start, length, lexeme);
             }
             return make_token(lx, TOKEN_ASSIGN, start, length, lexeme);
         }
