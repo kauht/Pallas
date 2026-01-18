@@ -15,7 +15,7 @@ y: f32 = (f32)x;    // OK: explicit cast
 ### Built-in Types
 
 #### Default Types
-- `int` - Integer (platform-dependent size)
+- `int` - Integer
 - `float` - Single precision floats
 - `double` - Double precision floats  
 - `char` - Character
@@ -26,17 +26,27 @@ y: f32 = (f32)x;    // OK: explicit cast
 #### Sized Types
 - **Signed integers**: `i8`, `i16`, `i32`, `i64`
 - **Unsigned integers**: `u8`, `u16`, `u32`, `u64`
-- **Floating point**: `f8`, `f16`, `f32`, `f64`
+- **Floating point**: `f32`, `f64`
 
-### Pointers
+### Pointers and Arrays
 
 ```pallas
-ptr: int*; // Pointer to int
-
-ptr_to_ptr: i32**; // Pointer to pointer to i32
+ptr: int*;              // Pointer to int
+ptr_to_ptr: i32**;      // Pointer to pointer to i32
+arr: i32[10];           // Fixed-size array
 
 // Null pointers
 ptr: i32* = null;
+```
+
+### Type Syntax
+
+```pallas
+i32        // Base type
+i32*       // Pointer to i32
+i32**      // Pointer to pointer
+i32[10]    // Array of 10 i32s
+i32*[5]    // Array of 5 pointers to i32
 ```
 
 ---
@@ -45,19 +55,14 @@ ptr: i32* = null;
 
 ### Structs
 
-Structs are simple data containers:
+Structs are just data:
 
 ```pallas
-struct Point {
-    x: i32;
-    y: i32;
-};
-
 struct Vector3 {
     x: f32;
     y: f32;
     z: f32;
-};
+}
 ```
 
 ### Classes
@@ -67,52 +72,37 @@ Classes support methods, constructors, destructors, and access control:
 ```pallas
 class Person {
     public:
-    name: string;
-    age: i32;
-    
-    // Constructor - same name as class
-    Person(n: string, a: i32) {
-        name = n;
-        age = a;
-    }
-    
-    // Destructor - prefixed with ~
-    ~Person() {
-        // Cleanup code
-    }
-    
-    greet(): void {
-        println("Hello, I'm {}", name);
-    }
+        name: string;
+        age: i32;
+        
+        // Constructor - same name as class
+        Person(n: string, a: i32) {
+            name = n;
+            age = a;
+        }
+        
+        // Destructor - prefixed with ~
+        ~Person() {
+            // Cleanup code
+        }
+        
+        greet(): void {
+            println("Hello, I'm ${name}");
+        }
     
     private:
-    ssn: string;
-    
-    validate(): bool {
-        return age >= 0;
-    }
-};
+        ssn: string;
+        
+        validate(): bool {
+            return age >= 0;
+        }
+}
 ```
 
 ### Access Modifiers
 
-- `public:` - Accessible from anywhere (applies to all following members)
-- `private:` - Only accessible within the class (applies to all following members)
-
-Like C++, visibility labels apply to all members that follow until another label is encountered.
-
-```pallas
-class BankAccount {
-    public:
-    deposit(amount: f32): void {
-        balance += amount;
-    }
-    
-    private:
-    balance: f32;
-    account_number: string;
-};
-```
+- `public:` - Accessible from anywhere
+- `private:` - Only accessible in the class
 
 ### Constructors and Destructors
 
@@ -122,7 +112,7 @@ class BankAccount {
 - Can have parameters
 
 **Destructors** clean up when objects are destroyed:
-- Class name prefixed with `~`
+- Class name with `~` prefix
 - No parameters
 - No return type
 - Called automatically when object goes out of scope
@@ -131,7 +121,7 @@ class BankAccount {
 class Resource {
     // Constructor
     Resource(filename: string) {
-        println("Opening {}", filename);
+        println("Opening ${filename}");
         // Initialize resource
     }
     
@@ -140,7 +130,7 @@ class Resource {
         println("Closing resource");
         // Clean up
     }
-};
+}
 ```
 
 ### Object Instantiation
@@ -149,15 +139,19 @@ class Resource {
 // Stack allocation
 person: Person = Person("Alice", 30);
 
-// With new (heap allocation)
-Person* ptr = new(Person);
+// Heap allocation
+ptr: Person* = new Person("Bob", 25);
 
 // Method calls
 person.greet();
 ptr->greet();
+
+// Cleanup
+delete ptr;
 ```
 
 ---
+
 
 ## Memory Management
 
@@ -165,22 +159,26 @@ ptr->greet();
 
 Like C, you are responsible for memory management:
 - No garbage collection
-- Explicit allocation and deallocation
-- Direct control over memory layout
+- Explicit allocation/deallocation
 
 ### Allocation and Deallocation
 
 ```pallas
-// Allocate memory
-ptr: i32* = new(i32);
-array: i32* = new(i32[10]);  // Array allocation
+// Allocate single object
+ptr: i32* = new i32;
+obj: Person* = new Person("Alice", 30);
+
+// Allocate arrays
+array: i32* = new i32[10];
 
 // Use the memory
 *ptr = 42;
+array[0] = 100;
 
 // Free memory when done
-delete(ptr);
-delete(array);
+delete ptr;
+delete obj;
+delete array;
 ```
 
 ### Stack vs Heap
@@ -191,11 +189,12 @@ x: i32 = 5;
 person: Person = Person("Bob", 25);
 
 // Heap allocation (manual cleanup required)
-ptr: i32* = new(i32);
-obj: Person* = new(Person);
+ptr: i32* = new i32;
+obj: Person* = new Person("Alice", 30);
 
-delete(ptr);
-delete(obj);
+// Manually delete heap allocated variables
+delete ptr;
+delete obj;
 ```
 
 ---
@@ -215,15 +214,6 @@ height: f32;
 // Constant variables (immutable)
 const PI: f32 = 3.14159;
 const MAX_SIZE: i32 = 100;
-```
-
-### Type Annotations
-
-All variables must have explicit type annotations:
-
-```pallas
-x: i32 = 42;        // OK
-y := 42;            // ERROR: type inference not supported (yet)
 ```
 
 ---
@@ -248,7 +238,17 @@ if (condition) {
 
 ```pallas
 for (i: i32 = 0; i < 10; i++) {
-    println("{}", i);
+    println("${i}");
+}
+
+// Variations
+for (; condition; ) {
+    // While-like loop
+}
+
+for (;;) {
+    // Infinite loop
+    break;
 }
 ```
 
@@ -266,23 +266,20 @@ while (condition) {
 }
 ```
 
-#### Future Loop Variants (Under Consideration)
 
-Range-based for loop:
+
+#### Pattern Types
+
+**Literal Patterns**
 ```pallas
-// Proposed syntax
-for (i in 0..10) {
-    println("{}", i);
+match (x) {
+    0 => { println("zero"); }
+    1 => { println("one"); }
+    42 => { println("the answer"); }
+    _ => { println("something else"); }
 }
 ```
 
-Iterator for loop:
-```pallas
-// Proposed syntax
-for (item : array) {
-    println("{}", item);
-}
-```
 
 ---
 
@@ -298,7 +295,12 @@ add(a: i32, b: i32): i32 {
 
 // Void function (no return value)
 greet(name: string): void {
-    println("Hello, {}", name);
+    println("Hello, ${name}");
+}
+
+// Implicit void (no return type specified)
+print_header() {
+    println("=== Header ===");
 }
 
 // No parameters
@@ -312,14 +314,15 @@ get_random(): i32 {
 Functions that accept a variable number of arguments:
 
 ```pallas
-println(format: string, ...): void {
+sum(first: i32, ...): i32 {
     // Implementation accesses variadic arguments
+    result: i32 = first;
     // Exact mechanism TBD
+    return result;
 }
 
 // Usage
-println("Hello, {}!", "World");
-println("Values: {}, {}, {}", 1, 2, 3);
+sum(1, 2, 3, 4, 5);
 ```
 
 ### Function Parameters
@@ -338,30 +341,55 @@ increment_ref(x: i32*): void {
 
 ---
 
+## String Interpolation
+
+Strings support embedded expressions using `${expression}` syntax:
+
+```pallas
+name: string = "Alice";
+age: i32 = 25;
+
+// Basic interpolation
+greeting: string = "Hello, ${name}!";
+
+// Multiple expressions
+info: string = "${name} is ${age} years old.";
+
+// Expressions in interpolation
+next_year: string = "Next year, ${name} will be ${age + 1} years old.";
+
+// Complex expressions
+calculation: string = "2 + 2 = ${2 + 2}";
+double_age: i32 = age * 2;
+complex: string = "Double age: ${double_age}, half: ${age / 2}";
+```
+
+---
+
 ## Module System
 
 ### Import Statements
 
 ```pallas
 // Import entire module
-import std.io;
-import std.collections;
+import std/io;
+import std/collections;
 
-// Include specific file (alternative syntax)
-include something.cool;
-
-// Usage
-std.io.println("Hello");
+// Relative imports
+import ./utils/math;
+import ../common/helpers;
 ```
 
-### Future Import Variants (Proposed)
+### Module Path Syntax
+
+- `/` separates module components
+- `./` for relative import from current directory
+- `../` for relative import from parent directory
 
 ```pallas
-// Import specific items
-from std.io import println, print;
-
-// Import with alias
-import std.collections as col;
+import std/io;              // Standard library
+import ./local/module;      // Local relative path
+import ../parent/sibling;   // Parent directory
 ```
 
 ---
@@ -376,8 +404,8 @@ import std.collections as col;
 *   // Multiplication
 /   // Division
 %   // Modulo
-++  // Increment
---  // Decrement
+++  // Increment (prefix and postfix)
+--  // Decrement (prefix and postfix)
 ```
 
 ### Assignment Operators
@@ -388,6 +416,7 @@ import std.collections as col;
 -=  // Subtract and assign
 *=  // Multiply and assign
 /=  // Divide and assign
+%=  // Modulo and assign
 ```
 
 ### Comparison Operators
@@ -440,104 +469,45 @@ import std.collections as col;
 ### Other Operators
 
 ```pallas
-?:  // Ternary operator (proposed)
+?:  // Ternary conditional operator
 []  // Array subscript
 ()  // Function call
+&   // Address-of (prefix)
+*   // Dereference (prefix)
 ```
 
 ---
 
-## Examples
 
-### Complete Program
-
-```pallas
-class Counter {
-    public:
-    Counter(initial: i32) {
-        count = initial;
-    }
-    
-    increment(): void {
-        count++;
-    }
-    
-    get_count(): i32 {
-        return count;
-    }
-    
-    private:
-    count: i32;
-};
-
-main(): i32 {
-    counter: Counter = Counter(0);
-    
-    for (i: i32 = 0; i < 5; i++) {
-        counter.increment();
-    }
-    
-    println("Count: {}", counter.get_count());
-    
-    return 0;
-}
-```
-
-### Memory Management Example
+### String Interpolation Example
 
 ```pallas
-class Buffer {
-    public:
-    Buffer(size: i32) {
-        data = new(u8[size]);
-        length = size;
+calculate_stats(numbers: i32*, count: i32): void {
+    sum: i32 = 0;
+    i: i32 = 0;
+    
+    while (i < count) {
+        sum += numbers[i];
+        i++;
     }
     
-    ~Buffer() {
-        delete(data);
-    }
+    avg: f32 = (f32)sum / (f32)count;
     
-    get(index: i32): u8 {
-        return data[index];
-    }
-    
-    private:
-    data: u8*;
-    length: i32;
-};
-
-main(): i32 {
-    buffer: Buffer(256);
-    // Buffer automatically cleaned up when out of scope
-    return 0;
+    println("Statistics:");
+    println("  Count: ${count}");
+    println("  Sum: ${sum}");
+    println("  Average: ${avg}");
+    println("  First: ${numbers[0]}, Last: ${numbers[count - 1]}");
 }
 ```
 
 ---
 
-## Philosophy
+## Design Decisions
 
-Pallas is designed to be:
-
-1. **Explicit**: No surprises, no implicit conversions
-2. **Powerful**: Low-level control when needed
-3. **Safe**: Modern features to prevent common bugs
-4. **Familiar**: Syntax inspired by C/C++ and Rust
-5. **Optional OOP**: Classes are tools, not requirements
-
----
-
-## Future Considerations
-
-Features under consideration for future versions:
-
-- **Generics/Templates**: Parameterized types for reusable code
-- **Pattern Matching**: Advanced switch/case statements
-- **Lambdas**: Anonymous functions for functional programming
-- **Move Semantics**: Efficient resource transfer
-- **Compile-time Execution**: Constexpr-like features
-- **Macros**: Compile-time code generation
-
----
-
-**Last Updated**: December 2024
+### Under Consideration
+- Range-based for loops
+- Lambda syntax
+- Generics/templates syntax
+- Inheritance support
+- Operator overloading
