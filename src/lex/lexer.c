@@ -142,7 +142,7 @@ static void skip_untracked(Lexer* lx) {
                 next_char(lx);
                 next_char(lx);
             } else {
-                errors_add(lx->errors, NULL, "Unterminated block comment", SEVERITY_ERROR, lx->line, lx->column, 0, CATEGORY_LEXER);
+                errors_add(lx->errors, lx->filename, "Unterminated block comment", SEVERITY_ERROR, lx->line, lx->column, 0, CATEGORY_LEXER);
             }
             continue;
         }
@@ -256,6 +256,8 @@ static Token lex_char(Lexer* lx) {
     } else {
         errors_add(lx->errors, lx->filename, "Unterminated character literal", SEVERITY_ERROR, lx->line, lx->column,
                    0, CATEGORY_LEXER);
+        size_t err_len = lx->pos - start;
+        return make_token(lx, TOKEN_ERROR, start, err_len, NULL);
     }
 
     size_t length = lx->pos - start;

@@ -1028,6 +1028,54 @@ void run_lexer_tests(void) {
         passed += run_test("Complete Match Statement", src, exp, sizeof(exp) / sizeof(exp[0]), 0);
     }
 
+    /* Additional error-recovery tests */
+
+    /* --------------- Test 47: Unterminated String Literal --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_ERROR, NULL},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "\"hello";
+        total++;
+        passed += run_test("Unterminated String Literal", src, exp, sizeof(exp) / sizeof(exp[0]), 1);
+    }
+
+    /* --------------- Test 48: Unterminated Character Literal --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_ERROR, NULL},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "'a";
+        total++;
+        passed += run_test("Unterminated Character Literal", src, exp, sizeof(exp) / sizeof(exp[0]), 1);
+    }
+
+    /* --------------- Test 49: Unterminated Block Comment --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_INT_LITERAL, "1"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "1 /* unclosed";
+        total++;
+        passed += run_test("Unterminated Block Comment", src, exp, sizeof(exp) / sizeof(exp[0]), 1);
+    }
+
+    /* --------------- Test 50: Invalid Number (Too Many Decimals) --------------- */
+    {
+        const ExpectedToken exp[] = {
+            {TOKEN_FLOAT_LITERAL, "1.2"},
+            {TOKEN_DOT, "."},
+            {TOKEN_INT_LITERAL, "3"},
+            {TOKEN_EOF, NULL},
+        };
+        const char* src = "1.2.3";
+        total++;
+        passed += run_test("Invalid Number - Too Many Decimals", src, exp, sizeof(exp) / sizeof(exp[0]), 1);
+    }
+
     /* Print results */
     printf("\n");
     printf("+========================================================================+\n");
@@ -1040,7 +1088,6 @@ void run_lexer_tests(void) {
     }
     printf("+========================================================================+\n");
     printf("\n");
-
     if (passed != total) {
         exit(1);
     }
