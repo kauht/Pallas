@@ -1,32 +1,51 @@
+<div align="center">
+
 # Pallas
-A programming language written in C
 
-## Introduction
-In Greek mythology, Pallas is the epithet for Athena—the goddess of wisdom, craft, and strategy. The name is perfect for this project because it's a language that's both powerful and intelligently designed, like how Athena represents strength and intelligence.
+Pallas is a general purpose and systems programming language written in C.
 
-Pallas is designed to be a familiar systems and general purpose programming language. Keeping the low level control of C, but implements it with a safer, modern design.
+Named after Pallas (the epithet of Athena), the goddess of wisdom, craft, and strategy felt right for a language like Pallas.
 
-### Language History
-Pallas is a completely original language with syntax and language features inspired by C/C++ and Rust. This is a personal project I'm using as a learning experience for future projects, and is heavily inspired by my friend [Lily](https://github.com/transicle)'s programming language, [ADAN](https://github.com/cappucina/adan).
+</div>
 
-## Documentation
+> [!WARNING]
+> **Pallas is currently in early development.**
 
-- [docs/DESIGN.md](docs/project/DESIGN.md) - Language design and syntax
-- [docs/IMPLEMENTATION.md](docs/project/IMPLEMENTATION.md) - Compiler Architecture Implementation
+## What it is
+Pallas gives you the low-level control of C while, implemented with a safer, modern design. This is a personal project inspired by my friend [Lily](https://github.com/transicle/)'s programming language, [ADAN](https://github.com/cappucina/adan) and many ideas taken from successful languages like C/C++, Rust and GO.
 
-### Project Management
-- [docs/PROJECT.md](./docs/project/PROJECT.md) - Roadmap and Tasks
-- [docs/CONTRIBUTING.md](./docs/project/CONTRIBUTING.md) - How to contribute
-- [docs/CODE_STYLE.md](docs/project/CODE_STYLE.md)
+## Quick build
 
-## Language Features
+```bash
+# Default (Debug)
+make
 
-- No implicit type casting
-- Better type system: `i8`, `u64`, `f32`, etc.
-- Generics/Templates
-- Lambdas
-- Variadic functions & easy accessing
-- Modules: `import std.io;` (no preprocessor)
-- Good driver
+# Release build
+make build-release
 
----
+# Debug build
+make build-debug
+```
+
+## Quick run
+
+```bash
+# Run the Release build
+make run
+
+# Run the Debug build
+make debug
+
+# Or run directly:
+./build/release/pallas --help
+```
+
+## Status / features
+- Explicit sized types, no implicit casts.
+- Structs/classes, manual new/delete with destructors.
+
+## Docs
+See [docs/project/DESIGN.md](docs/project/DESIGN.md)
+
+## License
+Open source - see [LICENSE](LICENSE)
