@@ -2,13 +2,9 @@
 #define PLATFORM_H
 
 #include <stdlib.h>
+#include <string.h>
 
-#ifdef _WIN32
 
-#endif
 
-#ifdef __unix
-
-#endif
 
 #endif /* PLATFORM_H */
