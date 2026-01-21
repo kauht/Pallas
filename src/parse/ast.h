@@ -68,7 +68,7 @@ struct ASTNode {
 
         /* Import -> import IDENT ('.' IDENT)* ';' */
         struct {
-            char** segments; /* dotted path pieces */
+            char** segments;
             size_t segment_count;
             size_t segment_capacity;
         } import_node;
@@ -165,7 +165,7 @@ struct ASTNode {
 
         /* Types */
 
-        /* BuiltinType / SizedType: instead of an enum, just keep the token kind as int */
+        /* BuiltinType */
         struct {
             int builtin_kind; /* TOKEN_INT, TOKEN_I32, etc. */
         } builtin_type;

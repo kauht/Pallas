@@ -3,22 +3,13 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "ast.h"
 #include "diagnostic.h"
+#include "platform.h"
 
 /* Helper */
-
-static void error(Parser* parser, char* fmt, ...) {
-    va_list args;
-    va_start(args, fmt);
-    char* formatted;
-    // vfprintf(formatted, fmt, args);
-
-    // push_error();
-    va_end(args);
-    return /* */;
-}
 
 static bool at_end(Parser* parser) {
     return parser->current >= parser->count || parser->tokens[parser->current].type == TOKEN_EOF;
@@ -79,7 +70,11 @@ static bool match(Parser* parser, uint32_t count, ...) {
 
 /* CFG Rules */
 
-/* Program Structure */
+static void free_ast_node(ASTNode* node) {
+    if (!node) return;
+    free(node);
+}
+
 
 static ASTNode* parse_top_decl(Parser* parser) {
     return NULL;
@@ -87,28 +82,10 @@ static ASTNode* parse_top_decl(Parser* parser) {
 
 static ASTNode* parse_import(Parser* parser) {
     ASTNode* node = create_ast_node(AST_IMPORT, peek(parser).line, peek(parser).column);
+    if (!node) return NULL;
     if (advance(parser).type != TOKEN_IMPORT) {
+        free(node);
         return NULL;
-    }
-    if (advance(parser).type != TOKEN_IDENT) {
-        errors_add(parser->errors, NULL, "Expected TOKEN_IDENT", SEVERITY_ERROR, previous(parser).line,
-                   previous(parser).column, 0, CATEGORY_PARSER);
-        synchronize(parser);
-    }
-    while (1) {
-        if (advance(parser).type != TOKEN_DOT) {
-            errors_add(parser->errors, NULL, "Expected TOKEN_IDENT", SEVERITY_ERROR, previous(parser).line,
-                       previous(parser).column, 0, CATEGORY_PARSER);
-            synchronize(parser);
-        }
-        if (advance(parser).type != TOKEN_IDENT) {
-            errors_add(parser->errors, NULL, "Expected TOKEN_IDENT", SEVERITY_ERROR, previous(parser).line,
-                       previous(parser).column, 0, CATEGORY_PARSER);
-            synchronize(parser);
-        }
-        if (advance(parser).type == TOKEN_SEMICOLON) {
-            break;
-        }
     }
 
     return NULL;
@@ -262,20 +239,23 @@ static ASTNode* parse_program(Parser* parser) {
     while (!at_end(parser) && check(parser, TOKEN_IMPORT)) {
         ASTNode* import_node = parse_import(parser);
         if (!import_node) {
-            break;
+            if (at_end(parser)) break;
+            synchronize(parser);
+            continue;
         }
-        // push into program->program.imports with realloc
     }
+
     while (!at_end(parser)) {
         ASTNode* decl = parse_top_decl(parser);
         if (!decl) {
             if (at_end(parser)) {
                 break;
             }
+            synchronize(parser);
             continue;
         }
-        // push into program->program.top_decls
     }
+
     return program;
 }
 
@@ -296,7 +276,8 @@ Parser* init_parser(const char* filename, Token* tks, uint32_t count, ErrorList*
 }
 
 ASTNode* run_parser(Parser* parser) {
-    parse_program(parser);
+    if (!parser) return NULL;
+    return parse_program(parser);
 }
 
 ASTNode* create_ast_node(ASTNodeType type, uint32_t line, uint32_t column) {
