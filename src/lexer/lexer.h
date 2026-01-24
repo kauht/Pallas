@@ -93,6 +93,7 @@ class Lexer {
 
   private:
     uint32_t position;
+    uint32_t line, column;
     std::vector<Token> tokens;
     std::unordered_map<std::string, TokenType> keywords;
     File file;
@@ -101,7 +102,7 @@ class Lexer {
     bool at_end();
     char next_char();
     char peek_char();
-    Token create_token(std::string lexeme, uint32_t line, uint32_t column, TokenType type);
+    Token create_token(std::string& lexeme, TokenType type);
     TokenType is_keyword(std::string s);
     void skip_untracked();
 

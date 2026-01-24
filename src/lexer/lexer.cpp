@@ -1,5 +1,6 @@
 #include "lexer.h"
 #include <cctype>
+#include <typeindex>
 #include <vector>
 #include <stdexcept>
 
@@ -15,7 +16,7 @@ char Lexer::peek_char() {
     if (position >= file.content.length()) return '\0';
     return file.content.at(position);
 }
-Token Lexer::create_token(std::string lexeme, uint32_t line, uint32_t column, TokenType type) {
+Token Lexer::create_token(std::string& lexeme, TokenType type) {
     return Token{lexeme, line, column, type};
 }
 TokenType Lexer::is_keyword(std::string s) {
@@ -62,10 +63,38 @@ void Lexer::skip_untracked() {
 
 // Lexer
 Token Lexer::lex_identifier() {
-    return{};
+    uint32_t start = position;
+    while (!at_end() && (isalnum(file.content.at(position)) || file.content.at(position) == '_')) {
+        next_char();
+    }
+    std::string lexeme = file.content.substr(start, position);
+    return create_token(lexeme, TOKEN_IDENT);
 }
 Token Lexer::lex_number() {
-    return{};
+    uint32_t start = position;
+    bool is_float;
+    while (!at_end()) {
+        char c = peek_char();
+        if (isdigit(c)) {
+            next_char();
+        } else if (c == '.') {
+            if (is_float) {
+                // error too many decimal points
+                break;
+            }
+            if (isdigit(file.content.at(position+1))) {
+                is_float = 1;
+                next_char();
+            } else {
+                // error trailing decimal
+                break;
+            }
+        } else {
+            break;
+        }
+    }
+    std::string lexeme = file.content.substr(start, position);
+    return create_token(lexeme, is_float ? TOKEN_FLOAT_LITERAL : TOKEN_INT_LITERAL);
 }
 Token Lexer::lex_char() {
     return{};
@@ -101,7 +130,7 @@ void Lexer::run() {
 }
 
 Lexer::Lexer(const std::string& path)
-    : position(0), file(get_content(path))
+    : position(0), line(1), column(1), file(get_content(path))
 {
     keywords = {
         {"import", TOKEN_IMPORT},
