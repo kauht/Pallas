@@ -3,7 +3,7 @@ IndentWidth: 4
 UseTab: Never
 PointerAlignment: Left
 ColumnLimit: 100
-AllowShortFunctionsOnASingleLine: None
+AllowShortFunctionsOnASingleLine: Inline
 BreakBeforeBraces: Attach
 DerivePointerBinding: false
 AlignAfterOpenBracket: true
@@ -13,6 +13,12 @@ AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortBlocksOnASingleLine: Never
 AllowShortEnumsOnASingleLine: false
+SortIncludes: true
+IncludeBlocks: Preserve
+AccessModifierOffset: -2
 BraceWrapping:
-    AfterControlStatement: Always
-    AfterFunction: true
+  AfterClass: true
+  AfterNamespace: true
+  AfterControlStatement: Always
+  AfterFunction: true
+  BeforeElse: true

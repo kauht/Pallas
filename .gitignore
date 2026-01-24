@@ -1,33 +1,63 @@
-```
-# Build artifacts
+# Build artifacts (object files, libraries, binaries)
 *.o
 *.obj
+*.lo
+*.la
+*.a
+*.lib
+*.dll
+*.so
+*.dylib
+*.dSYM
 *.exe
 *.out
-*.a
-*.so
-*.dll
-*.dylib
 
 # Build directories
-build/
-bin/
-obj/
-out/
+/build/
+/bin/
+/obj/
+/out/
+/dist/
+/build-*/
 
-# IDE files
+# CMake artifacts
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+cmake_export.cmake
+compile_commands.json
+Makefile
+
+# IDE / Editor
 .vscode/
 .idea/
-*.swp
-*.swo
+*.code-workspace
+*.sublime-*
+*.sw?
 *~
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# Temporary files
+# Temporary / logs / caches
 *.tmp
 *.temp
 *.log
 .cache/
+coverage/
+*.prof
+*.gcno
+*.gcda
+
+# Visual Studio / MSVC specific
+.vs/
+*.user
+*.VC.db
+*.VC.opendb
+*.ipch
+*.pdb
+
+# Misc
+tags
+cscope.*
