@@ -1,22 +1,27 @@
 #include "lexer.h"
 #include <cctype>
 #include <vector>
+#include <stdexcept>
 
 
 bool Lexer::at_end() {
     return position >= file.content.length();
 }
 char Lexer::next_char() {
+    if (at_end()) return '\0';
     return file.content.at(position++);
 }
 char Lexer::peek_char() {
-    return file.content.at(position+1);
+    if (position >= file.content.length()) return '\0';
+    return file.content.at(position);
 }
-bool Lexer::create_token() {
-
+Token Lexer::create_token(std::string lexeme, uint32_t line, uint32_t column, TokenType type) {
+    return Token{lexeme, line, column, type};
 }
 TokenType Lexer::is_keyword(std::string s) {
-    return keywords.at(s);
+    auto it = keywords.find(s);
+    if (it != keywords.end()) return it->second;
+    return TOKEN_IDENT;
 }
 void Lexer::skip_untracked() {
     while (!at_end()) {
@@ -25,16 +30,22 @@ void Lexer::skip_untracked() {
             next_char();
             continue;
         }
-        if (c == '/' && file.content.at(position+2) == '/') {
+        if (c == '/' && position + 1 < file.content.length() && file.content.at(position+1) == '/') {
+            // consume the '//' then skip to end of line
+            next_char();
+            next_char();
             while (peek_char() != '\n' && !at_end()) {
                 next_char();
             }
             continue;
         }
-        if (c == '/' && file.content.at(position+2) == '*') {
+        if (c == '/' && position + 1 < file.content.length() && file.content.at(position+1) == '*') {
             next_char();
             next_char();
-            while (!(peek_char() == '*' && file.content.at(position+2) == '/') && !at_end()) {
+            while (!at_end()) {
+                if (peek_char() == '*' && position + 1 < file.content.length() && file.content.at(position+1) == '/') {
+                    break;
+                }
                 next_char();
             }
             if (!at_end()) {
@@ -51,46 +62,47 @@ void Lexer::skip_untracked() {
 
 // Lexer
 Token Lexer::lex_identifier() {
-
+    return{};
 }
 Token Lexer::lex_number() {
-
+    return{};
 }
 Token Lexer::lex_char() {
-
+    return{};
 }
 Token Lexer::lex_string() {
-
+    return{};
 }
 Token Lexer::lex_operator() {
-
+    return{};
 }
 
 
- // Main
- Token Lexer::next_token() {
-     skip_untracked();
-     char c = peek_char();
+// Main
+Token Lexer::next_token() {
+    skip_untracked();
+    char c = peek_char();
 
-     if (isdigit(c)) return lex_number();
-     if (isalpha(c) || c == '_') return lex_identifier();
-     if (c == '\"') return lex_string();
-     if (c == '\'') return lex_char();
+    if (isdigit(static_cast<unsigned char>(c))) return lex_number();
+    if (isalpha(static_cast<unsigned char>(c)) || c == '_') return lex_identifier();
+    if (c == '\"') return lex_string();
+    if (c == '\'') return lex_char();
 
-     return lex_operator();
- }
+    return lex_operator();
+}
 
 void Lexer::run() {
 
     while (true) {
-        position++;
         tokens.push_back(next_token());
         if (at_end()) break;
+        position++;
     }
 }
 
-Lexer::Lexer(std::string path)
-: file(get_content(path)) {
+Lexer::Lexer(const std::string& path)
+    : position(0), file(get_content(path))
+{
     keywords = {
         {"import", TOKEN_IMPORT},
         {"if", TOKEN_IF},
@@ -114,4 +126,7 @@ Lexer::Lexer(std::string path)
         {"match", TOKEN_MATCH},
         {"enum", TOKEN_ENUM},
     };
+}
+Lexer::~Lexer() {
+
 }

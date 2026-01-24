@@ -80,18 +80,18 @@ enum TokenType {
 
 struct Token {
     std::string lexeme;
-    int line;
-    int column;
+    uint32_t line;
+    uint32_t column;
     TokenType type;
 };
 
 class Lexer {
   public:
-    Lexer(std::string path);
+    Lexer(const std::string& path);
     ~Lexer();
     void run();
 
-    private:
+  private:
     uint32_t position;
     std::vector<Token> tokens;
     std::unordered_map<std::string, TokenType> keywords;
@@ -101,7 +101,7 @@ class Lexer {
     bool at_end();
     char next_char();
     char peek_char();
-    bool create_token();
+    Token create_token(std::string lexeme, uint32_t line, uint32_t column, TokenType type);
     TokenType is_keyword(std::string s);
     void skip_untracked();
 

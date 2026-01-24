@@ -1,10 +1,12 @@
 #pragma once
 #include <string>
+#include <utility>
 
 struct File {
-    const std::string path;
-    const std::string filename;
-    const std::string content;
+    std::string path;
+    std::string filename;
+    std::string content;
+    //File() = default;
 };
 
 File get_content(const std::string& path);
