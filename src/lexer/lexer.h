@@ -2,6 +2,8 @@
 
 #include <string>
 #include <unordered_map>
+#include <cstdint>
+#include <vector>
 #include "../filesystem/fs.h"
 
 enum TokenType {
@@ -75,7 +77,13 @@ enum TokenType {
     TOKEN_AMPERSAND,
     TOKEN_PIPE,
     TOKEN_CARET,
-    TOKEN_TILDE
+    TOKEN_TILDE,
+
+    TOKEN_PLUS_ASSIGN,
+    TOKEN_SLASH_ASSIGN,
+    TOKEN_STAR_ASSIGN,
+    TOKEN_MINUS_ASSIGN,
+    TOKEN_XOR
 };
 
 struct Token {
@@ -102,8 +110,8 @@ class Lexer {
     bool at_end();
     char next_char();
     char peek_char();
-    Token create_token(std::string& lexeme, TokenType type);
-    TokenType is_keyword(std::string s);
+    Token create_token(const std::string& lexeme, uint32_t start_line, uint32_t start_column, TokenType type);
+    TokenType is_keyword(const std::string& s);
     void skip_untracked();
 
     // Lexer

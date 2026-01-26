@@ -6,7 +6,7 @@ struct File {
     std::string path;
     std::string filename;
     std::string content;
-    //File() = default;
+    // File() = default;
 };
 
 File get_content(const std::string& path);

@@ -4,7 +4,7 @@
 
 Pallas is a general purpose and systems programming language written in C++.
 
-Named after Pallas (the epithet of Athena), the goddess of wisdom, craft, and strategy felt right for a language like Pallas.
+Named after Pallas (the epithet of Athena), the goddess of wisdom, craft, and strategy.
 
 </div>
 
