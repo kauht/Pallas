@@ -1,10 +1,6 @@
 #include "lexer.h"
-#include <algorithm>
 #include <cctype>
 #include <iostream>
-#include <typeindex>
-#include <vector>
-#include <stdexcept>
 
 
 bool Lexer::at_end() {
@@ -74,7 +70,7 @@ Token Lexer::lex_identifier() {
     uint32_t start = position;
     uint32_t start_line = line;
     uint32_t start_column = column;
-    while (!at_end() && (isalnum(static_cast<unsigned char>(file.content.at(position))) || file.content.at(position) == '_')) {
+    while (!at_end() && (isalnum(file.content.at(position)) || file.content.at(position) == '_')) {
         next_char();
     }
     std::string lexeme = file.content.substr(start, position - start);
@@ -88,14 +84,14 @@ Token Lexer::lex_number() {
     bool is_float = false;
     while (!at_end()) {
         char c = peek_char();
-        if (isdigit(static_cast<unsigned char>(c))) {
+        if (isdigit(c)) {
             next_char();
         } else if (c == '.') {
             if (is_float) {
                 // error too many decimal points
                 break;
             }
-            if (position + 1 < file.content.length() && isdigit(static_cast<unsigned char>(file.content.at(position+1)))) {
+            if (position + 1 < file.content.length() && isdigit(file.content.at(position+1))) {
                 is_float = true;
                 next_char();
             } else {
@@ -178,7 +174,9 @@ Token Lexer::lex_string() {
         }
         if (c == '\\') {
             next_char();
-            if (!at_end()) next_char();
+            if (!at_end()){
+                next_char();
+            }
             continue;
         }
         next_char();
@@ -232,8 +230,9 @@ Token Lexer::lex_operator() {
             break;
         }
         case '.': {
-            if (peek_char() == '.' && position + 2 < file.content.length() && file.content.at(position+2) == '.') {
-                next_char();
+            // first '.' already consumed; check the next two chars for '..'
+            if (peek_char() == '.' && position + 1 < file.content.length() && file.content.at(position+1) == '.') {
+                next_char(); // consume second '.'
                 next_char();
                 type = TOKEN_ELLIPSIS;
                 break;
@@ -267,7 +266,7 @@ Token Lexer::lex_operator() {
             break;
         }
         case '^': {
-            type = TOKEN_XOR;
+            type = TOKEN_CARET;
             break;
         }
         case '+': {
@@ -390,8 +389,8 @@ Token Lexer::next_token() {
     skip_untracked();
     char c = peek_char();
 
-    if (isdigit(static_cast<unsigned char>(c))) return lex_number();
-    if (isalpha(static_cast<unsigned char>(c)) || c == '_') return lex_identifier();
+    if (isdigit(c)) return lex_number();
+    if (isalpha(c) || c == '_') return lex_identifier();
     if (c == '\"') return lex_string();
     if (c == '\'') return lex_char();
 
@@ -435,4 +434,12 @@ Lexer::Lexer(const std::string& path)
 }
 Lexer::~Lexer() {
     std::cout << "Lexer destroyed" << std::endl;
+}
+
+std::vector<Token>& Lexer::get_tokens() {
+    return tokens;
+}
+
+const std::vector<Token>& Lexer::get_tokens() const {
+    return tokens;
 }

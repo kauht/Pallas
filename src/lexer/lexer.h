@@ -1,13 +1,14 @@
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
-#include <cstdint>
 #include <vector>
 #include "../filesystem/fs.h"
 
 enum TokenType {
     TOKEN_EOF,
+    TOKEN_UNKNOWN,
     TOKEN_IDENT,
 
     TOKEN_IMPORT,
@@ -99,6 +100,9 @@ class Lexer {
     ~Lexer();
     void run();
 
+    std::vector<Token>& get_tokens();
+    const std::vector<Token>& get_tokens() const;
+
   private:
     uint32_t position;
     uint32_t line, column;
@@ -110,7 +114,8 @@ class Lexer {
     bool at_end();
     char next_char();
     char peek_char();
-    Token create_token(const std::string& lexeme, uint32_t start_line, uint32_t start_column, TokenType type);
+    Token create_token(const std::string& lexeme, uint32_t start_line, uint32_t start_column,
+                       TokenType type);
     TokenType is_keyword(const std::string& s);
     void skip_untracked();
 
