@@ -88,20 +88,19 @@ Pallas is a personal project - I'd appreciate contributions, feedback, and discu
 
 ### Prerequisites
 - CMake
-- A C11-compatible compiler (clang / gcc / MSVC)
+- A C++17 compatible compiler
 - LLVM v14+
 
 ### Build
 
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
-cmake --build build -- -j
+cmake -S . -B build
+cmake --build build
 ```
 
 ### Run
 
 ```bash
-cmake --build build --target run
 
 build/palc --help
 ```
@@ -116,16 +115,16 @@ Pallas uses explicitly-sized types. No implicit numeric conversions.
 
 | Type | Description |
 |:---|:---|
-| `i8`, `i16`, `i32`, `i64`, `i128` | Signed integers |
-| `u8`, `u16`, `u32`, `u64`, `i128` | Unsigned integers |
+| `i8`, `i16`, `i32`, `i64`, `i128` | Signed |
+| `u8`, `u16`, `u32`, `u64`, `i128` | Unsigned |
 | `f32`, `f64` | Floating point |
 | `bool` | Boolean |
-| `char` | Single character |
-| `string` | String type |
-| `void` | Empty type |
+| `char` | Character |
+| `string` | String |
+| `void` | No Type |
 
 **Type aliases:**
-| Alias | Maps to |
+| Alias | Equals |
 |:---|:---|
 | `int` | `i64` |
 | `uint` | `u64` |
@@ -135,7 +134,7 @@ Pallas uses explicitly-sized types. No implicit numeric conversions.
 **Pointers and Arrays:**
 - `T*` - pointer to T
 - `T**` - pointer to pointer
-- `T[n]` - fixed-size array
+- `T[n]` - array of n size
 
 ### Variables and Functions
 
@@ -150,7 +149,7 @@ square(n: i32): i32 {
 
 ### Structs and Classes
 
-**Structs** are data-only. **Classes** support methods, constructors, and destructors.
+**Structs** only support data. **Classes** support methods, constructors, and destructors.
 
 ```pallas
 struct Vector3 {
@@ -207,7 +206,7 @@ while (counter < n) {
 match (x) {
     0 => { println("zero"); }
     1 => { println("one"); }
-    42 => { println("the answer"); }
+    42 => { println("rahh"); }
     _ => { println("something else"); }
 }
 ```
@@ -228,11 +227,14 @@ delete arr;
 
 ### Type Casting
 
-No implicit conversions between integers and floats, besides when using literals.
+No implicit conversions, besides when using literals.
 
 ```pallas
-x: i32 = 5;
-y: f32 = (f32)x;
+x: i32 = 5; // OK
+y: f32 = 5; // OK
+z: f32 = (f32)x; // OK
+
+a: f32 = x; // ERROR
 ```
 
 ---
@@ -263,15 +265,15 @@ main(): void {
 
 Goals:
 
-- Finish and publish language spec
-- Start C++ Port
-- Complete Lexer
+- Finish language spec
+- Complete Scanner(pretty much done)
 - Complete Parser
 - Complete Semantic
+- Integrate LLVM
 - Complete IR
 - Complete Codegen
 - Add tests for parser, semantics, and codegen
-- Write LSP and formatter (VSCode/Zed/Neovim Plugins)
+- Write LSP and formatter (VSCode/Zed/Neovim)
 
 ---
 
