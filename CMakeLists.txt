@@ -13,14 +13,14 @@ file(GLOB_RECURSE SRC_FILES
     src/*.cxx
 )
 
-add_executable(pallas ${SRC_FILES})
+add_executable(palc ${SRC_FILES})
 
-target_include_directories(pallas PRIVATE include)
+target_include_directories(palc PRIVATE include)
 
-target_compile_options(pallas PRIVATE
+target_compile_options(palc PRIVATE
     $<$<CONFIG:Debug>:-g>
 )
 
-target_compile_options(pallas PRIVATE
+target_compile_options(palc PRIVATE
     $<$<CONFIG:Release>:-O3 -DNDEBUG>
 )

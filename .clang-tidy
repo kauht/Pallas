@@ -1,0 +1,18 @@
+---
+Checks: |
+  cppcoreguidelines-*,
+  clang-analyzer-*,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-avoid-non-const-global-variables,
+  -readability-*,
+  -modernize-*,
+  -modernize-use-trailing-return-type,
+  -performance-enum-size,
+  -bugprone-exception-escape,
+  -bugprone-easily-swappable-parameters,
+  -clang-diagnostic-*
+HeaderFilterRegex: 'src/.*'
+WarningsAsErrors: ''
+FormatStyle: file
