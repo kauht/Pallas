@@ -40,7 +40,7 @@ What Pallas gives you:
 
 ## Community
 
-Pallas is a personal project - I'd appreciate contributions, feedback, and discussion.
+Pallas is a personal project - Though I'd appreciate any contributions and feedback.
 
 - Personal Discord: ***@kauht*** or ***@yuhbayn***
 
