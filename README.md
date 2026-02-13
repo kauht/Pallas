@@ -27,16 +27,14 @@
 
 ## Overview
 
-**Pallas** is a personalized systems programming language that combines low-level control with a safer, modern language design. This is a personal project inspired by my friend [Lily](https://github.com/transicle/)'s programming language, [ADAN](https://github.com/cappucina/adan) and many ideas inspired by successful languages like C/C++, Go, Rust and Zig.
-
-The goal of pallas is to give you a healthy mix of safety and control without compromise, and zero-cost semantic, syntax, and functional abstractions. The syntax is familiar and simple, easy to pick up if you know other C-style languages.
+**Pallas** is a systems programming language that combines low-level control with a safer, modern language design. This is a personal project inspired by my friend [Lily](https://github.com/transicle/)'s programming language, [ADAN](https://github.com/cappucina/adan) and many ideas inspired by languages like C/C++, Go, Rust and Zig.
 
 What Pallas gives you:
-- Explicit behavior (no implicit conversions and predictable semantics)
-- Manual memory management and powerful stdlib helpers
+- Explicit behavior
+- Manual memory management
 - Structs and classes
-- Pattern matching and C-style control flow
-- Readable, familiar syntax
+- Pattern matching
+- Familiar syntax
 
 ---
 
