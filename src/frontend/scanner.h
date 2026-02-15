@@ -8,7 +8,7 @@
 
 namespace pallas::frontend {
 
-enum class TokenType : std::uint8_t {
+enum class TokenType {
     TOKEN_EOF,
     TOKEN_ERROR,
     TOKEN_IMPORT,
