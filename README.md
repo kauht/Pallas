@@ -3,7 +3,7 @@
   <h3>A modern systems language you actually want to use.</h3>
   <br>
   <p>
-    <a href="#"><img src="https://github.com/kauht/Pallas/actions/workflows/cmake-multi-platform.yml/badge.svg" alt="Build Status"></a>
+    <a href="#"><img src="https://github.com/kauht/Pallas/actions/workflows/cmake-multi-platform.yml/badge.svg"></a>
     <a href="#"><img src="https://img.shields.io/badge/license-MIT-blue" alt="License"></a>
     <a href="#"><img src="https://img.shields.io/badge/platform-x64-lightgrey" alt="Platform"></a>
   </p>
