@@ -110,7 +110,7 @@ build/palc --help
 
 ### Types
 
-Pallas uses explicitly-sized types. No implicit numeric conversions.
+Pallas uses explicitly-sized types. No implicit conversions.
 
 | Type | Description |
 |:---|:---|
