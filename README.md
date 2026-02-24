@@ -288,7 +288,7 @@ Pallas uses MIT licensed - see `LICENSE`.
 
 ## Influences
 
-**Pallas is heavily inspired by the following projects**
+**Pallas is heavily inspired by the following:**
 - C, C++, Rust, Zig, Go
 - [Lily](https://github.com/transicle/)
 - [ADAN](https://github.com/cappucina/ADAN)
