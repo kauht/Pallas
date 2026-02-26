@@ -47,41 +47,6 @@ Pallas is a personal project - Though I'd appreciate any contributions and feedb
 
 ---
 
-## Index
-
-<table align="center">
-  <tr>
-    <th width="50%">General</th>
-    <th width="50%">Language Reference</th>
-  </tr>
-  <tr>
-    <td valign="top">
-      <ul>
-        <li><a href="#overview">Overview</a></li>
-        <li><a href="#community">Community</a></li>
-        <li><a href="#quick-start">Quick Start</a></li>
-        <li><a href="#examples">Examples</a></li>
-        <li><a href="#roadmap">Roadmap</a></li>
-        <li><a href="#contributing">Contributing</a></li>
-        <li><a href="#license">License</a></li>
-      </ul>
-    </td>
-    <td valign="top">
-      <ul>
-        <li><a href="#types">Types</a></li>
-        <li><a href="#variables-and-functions">Variables & Functions</a></li>
-        <li><a href="#structs-and-classes">Structs & Classes</a></li>
-        <li><a href="#control-flow">Control Flow</a></li>
-        <li><a href="#pattern-matching">Pattern Matching</a></li>
-        <li><a href="#pointers-and-memory">Pointers & Memory</a></li>
-        <li><a href="#type-casting">Type Casting</a></li>
-      </ul>
-    </td>
-  </tr>
-</table>
-
----
-
 ## Quick Start
 
 ### Prerequisites
