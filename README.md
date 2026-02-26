@@ -41,10 +41,9 @@ What Pallas gives you:
 
 Pallas is a personal project - Though I'd appreciate any contributions and feedback.
 
-- Personal Discord: ***@kauht*** or ***@yuhbayn***
-
-- Discord: [Server](https://discord.gg/WVMHUgrgeH)
-- GitHub: [kauht/Pallas](https://github.com/kauht/Pallas)
+- Discord: **@kauht** or **@yuhbayn**
+- Discord Server: https://discord.gg/WVMHUgrgeH
+- GitHub: https://github.com/kauht/Pallas
 
 ---
 
