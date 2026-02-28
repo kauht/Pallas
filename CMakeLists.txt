@@ -1,26 +1,23 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.16)
 project(pallas VERSION 0.1.0 LANGUAGES CXX)
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
-file(GLOB_RECURSE SRC_FILES
-    src/*.cpp
-    src/*.cc
-    src/*.cxx
-)
-
-add_executable(palc ${SRC_FILES})
-
-target_include_directories(palc PRIVATE include)
-
-target_compile_options(palc PRIVATE
-    $<$<CONFIG:Debug>:-g>
-)
-
-target_compile_options(palc PRIVATE
-    $<$<CONFIG:Release>:-O3 -DNDEBUG>
-)
+file(GLOB_RECURSE CORE_SRC src/*.cpp src/*.cc src/*.cxx)
+list(REMOVE_ITEM CORE_SRC ${CMAKE_SOURCE_DIR}/src/main.cpp)
+add_library(pallas_core ${CORE_SRC})
+target_include_directories(pallas_core PUBLIC include)
+add_executable(palc src/main.cpp)
+target_link_libraries(palc PRIVATE pallas_core)
+include(FetchContent)
+FetchContent_Declare(Catch2 GIT_REPOSITORY https://github.com/catchorg/Catch2.git GIT_TAG v3.5.0)
+FetchContent_MakeAvailable(Catch2)
+enable_testing()
+file(GLOB_RECURSE TEST_SRC tests/*.cpp)
+add_executable(pallas_tests ${TEST_SRC})
+target_include_directories(pallas_tests PRIVATE ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/src)
+target_link_libraries(pallas_tests PRIVATE pallas_core Catch2::Catch2WithMain)
+include(CTest)
+include(Catch)
+catch_discover_tests(pallas_tests)

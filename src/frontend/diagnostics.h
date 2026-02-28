@@ -45,6 +45,15 @@ class Diagnostics {
         diagnostics_.push_back(std::move(d));
     }
 
+    void report(Info& info) {
+        diagnostics_.push_back(std::move(info));
+    }
+
+    const std::vector<Info>& all() const noexcept { return diagnostics_; }
+    std::size_t size() const noexcept { return diagnostics_.size(); }
+    const Info& operator[](std::size_t i) const { return diagnostics_.at(i); }
+    void clear() { diagnostics_.clear(); }
+
     void print() const {
         std::string out;
         for (const Info& d : diagnostics_) {

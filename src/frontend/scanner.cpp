@@ -18,6 +18,10 @@ void Scanner::report(Severity sev, ErrorCode code, const std::string& msg, std::
     }
 }
 
+std::vector<Token> Scanner::get_tokens() {
+    return tokens;
+}
+
 Token Scanner::next_token() {
     if (token_index < tokens.size()) {
         return tokens[token_index++];
@@ -152,7 +156,8 @@ void Scanner::skip_untracked() {
 }
 
 void Scanner::s_identifier() {
-    while ((std::isalnum(peek_char()) != 0) || peek_char() == '_') {
+    while ((std::isalnum(peek_char()) != 0) || peek_char() == '_' ||
+           (peek_char() & 0x80)) {
         advance();
     }
     std::size_t len = position - start;
@@ -227,30 +232,29 @@ void Scanner::s_char() {
 }
 
 void Scanner::s_string() {
-    bool closed = false;
     while (!is_at_end()) {
-        if (peek_char() == '"') {
-            closed = true;
-            break;
-        }
-        if (peek_char() == '\\') {
+        char c = peek_char();
+        if (c == '\"') {
             advance();
-            if (!is_at_end()) {
-                advance();
-            }
+            add_token(TokenType::TOKEN_STRING_LITERAL);
+            return;
+        }
+        if (c == '\\') {
+            advance();
+            if (!is_at_end()) advance();
             continue;
         }
         advance();
     }
 
-    if (closed && !is_at_end() && peek_char() == '"') {
-        advance();
-        add_token(TokenType::TOKEN_STRING_LITERAL);
-    } else {
-        report(Severity::Error, ErrorCode::E107_UNTERMINATED_STRING_LITERAL,
-               "unterminated string literal", start, position, start_line, start_column);
-        add_token(TokenType::TOKEN_STRING_LITERAL);
-    }
+    report(Severity::Error, ErrorCode::E107_UNTERMINATED_STRING_LITERAL,
+           "unterminated string literal", start, position, start_line, start_column);
+
+    position = start + 1;
+    line = start_line;
+    column = start_column + 1;
+
+    return;
 }
 
 void Scanner::s_operator() {
@@ -439,10 +443,25 @@ void Scanner::s_operator() {
             advance();
             add_token(TokenType::TOKEN_TILDE);
             return;
-        default:
-            advance();
-            add_token(TokenType::TOKEN_IDENT);
+        default: {
+            unsigned char b = peek_char();
+            if (b >= 0x80) {
+                advance();
+                while (true) {
+                    unsigned char nb = peek_char();
+                    if ((nb & 0xC0) == 0x80) {
+                        advance();
+                        continue;
+                    }
+                    break;
+                }
+                add_token(TokenType::TOKEN_IDENT);
+            } else {
+                advance();
+                add_token(TokenType::TOKEN_IDENT);
+            }
             return;
+        }
     }
 }
 
@@ -459,7 +478,7 @@ void Scanner::scan() {
 
         char c = peek_char();
 
-        if ((std::isalpha(c) != 0) || c == '_') {
+        if ((std::isalpha(c) != 0) || c == '_' || (c & 0x80)) {
             s_identifier();
             continue;
         }
@@ -489,7 +508,11 @@ void Scanner::scan() {
     add_token(TokenType::TOKEN_EOF);
 }
 
-Scanner::Scanner(std::string source_text) : source(std::move(source_text)) {
+Scanner::Scanner(std::string source_text) : source(std::move(source_text)), diagnostics(nullptr) {
+    scan();
+}
+
+Scanner::Scanner(std::string source_text, Diagnostics* diag) : source(std::move(source_text)), diagnostics(diag) {
     scan();
 }
 

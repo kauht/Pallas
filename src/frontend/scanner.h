@@ -110,7 +110,12 @@ struct Token {
 };
 
 class Scanner {
-  private:
+    public:
+    Scanner(std::string source_text);
+    Scanner(std::string source_text, Diagnostics* diagnostics);
+    std::vector<Token> get_tokens();
+    Diagnostics* get_diagnostics() const { return diagnostics; }
+    private:
     std::unordered_map<std::string, TokenType> keywords = {
         {"import", TokenType::TOKEN_IMPORT},   {"if", TokenType::TOKEN_IF},
         {"else", TokenType::TOKEN_ELSE},       {"for", TokenType::TOKEN_FOR},
@@ -133,8 +138,6 @@ class Scanner {
         {"u64", TokenType::TOKEN_U64},         {"u128", TokenType::TOKEN_U128},
         {"f32", TokenType::TOKEN_F32},         {"f64", TokenType::TOKEN_F64},
     };
-
-    Scanner(std::string source_text);
     Token next_token();
 
     std::string source;
