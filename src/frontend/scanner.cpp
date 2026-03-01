@@ -508,7 +508,7 @@ void Scanner::scan() {
     add_token(TokenType::TOKEN_EOF);
 }
 
-Scanner::Scanner(std::string source_text) : source(std::move(source_text)), diagnostics(nullptr) {
+Scanner::Scanner(std::string source_text) : source(std::move(source_text)) {
     scan();
 }
 
