@@ -31,6 +31,7 @@ TYPE_ARGS          ::= "<" TYPE { "," TYPE } ">" ;
 
 TYPE               ::= TYPE_ATOM [ TYPE_ARGS ]
                      | POINTER_TYPE
+                     | REFERENCE_TYPE
                      | ARRAY_TYPE
                      | FUNCTION_TYPE ;
 
@@ -42,6 +43,7 @@ PRIMITIVE_TYPE     ::= "i8" | "i16" | "i32" | "i64" | "i128"
                      | "bool" | "char" | "string" | "void" ;
 
 POINTER_TYPE       ::= TYPE "*" ;
+REFERENCE_TYPE     ::= TYPE "&" ;
 
 ARRAY_TYPE         ::= TYPE "[" EXPRESSION "]" ;
 
@@ -155,7 +157,7 @@ INDEX_EXPR         ::= PRIMARY_EXPR "[" EXPRESSION "]" ;
 MEMBER_ACCESS_EXPR ::= PRIMARY_EXPR "." IDENTIFIER [ TYPE_ARGS ] "(" [ ARGUMENT_LIST ] ")"
                      | PRIMARY_EXPR "." IDENTIFIER ;
 
-NEW_EXPR           ::= "new" TYPE ;
+NEW_EXPR           ::= "new" TYPE | "new" "(" IDENTIFIER ")" TYPE ;
 DELETE_EXPR        ::= "delete" EXPRESSION ;
 
 LITERAL            ::= INTEGER_LITERAL | FLOAT_LITERAL | STRING_LITERAL | CHAR_LITERAL | BOOLEAN_LITERAL ;
@@ -167,6 +169,7 @@ BOOLEAN_LITERAL    ::= BOOLEAN_LITERAL ;
 
 CONST_EXPR         ::= LITERAL | IDENTIFIER | CONST_EXPR_BINOP ;
 CONST_EXPR_BINOP   ::= CONST_EXPR ( "+" | "-" | "*" | "/" | "%" ) CONST_EXPR ;
+ARENA_BLOCK        ::= "arena" "(" [ EXPRESSION ] ")" BLOCK ;
 
 RANGE_FOR_EXAMPLE  ::= "for" "(" IDENTIFIER ":" EXPRESSION ")" BLOCK ;
 

@@ -93,10 +93,11 @@ Pallas uses explicitly-sized types. No implicit conversions.
 | `float` | `f32` |
 | `double` | `f64` |
 
-**Pointers and Arrays:**
-- `T*` - pointer to T
+**Pointers, References and Arrays:**
+- `T*` - pointer to `T`
+- `T&` - reference to `T`
 - `T**` - pointer to pointer
-- `T[n]` - array of n size
+- `T[n]` - array of size `n`
 
 ### Variables and Functions
 
@@ -182,11 +183,22 @@ v.push(20);
 for (x : v) {
     println("${x}");
 }
+```
 
-for (i: i64 = 0; i < a.size(); i = i + 1) {
-    v: i32 = a[i];
-    println("${v}");
-}
+Arena allocation:
+
+```pallas
+arena(4096) {
+    tmp_str: string* = new string("temp");  // in arena
+    buf: i32* = new i32[64];                // in arena
+} // all arena allocations are freed here
+
+// Arena type for manual control
+arena: Arena = Arena(8192);
+p: Foo* = new(arena) Foo(...);
+q: Foo* = new(arena) Foo(...);
+// reuse allocations...
+arena.free_all(); // free all allocations from my_arena
 ```
 
 
