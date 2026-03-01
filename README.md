@@ -64,7 +64,6 @@ cmake --build build
 ### Run
 
 ```bash
-
 build/palc --help
 ```
 
@@ -79,7 +78,7 @@ Pallas uses explicitly-sized types. No implicit conversions.
 | Type | Description |
 |:---|:---|
 | `i8`, `i16`, `i32`, `i64`, `i128` | Signed |
-| `u8`, `u16`, `u32`, `u64`, `i128` | Unsigned |
+| `u8`, `u16`, `u32`, `u64`, `u128` | Unsigned |
 | `f32`, `f64` | Floating point |
 | `bool` | Boolean |
 | `char` | Character |
@@ -112,7 +111,7 @@ square(n: i32): i32 {
 
 ### Structs and Classes
 
-**Structs** only support data. **Classes** support methods, constructors, and destructors.
+`struct`s hold data only. `class`es support methods, constructors, and destructors.
 
 ```pallas
 struct Vector3 {
@@ -222,6 +221,57 @@ main(): void {
 }
 ```
 
+### Generics
+
+```pallas
+
+// Generic class
+class Optional<T> {
+    has: bool;
+    value: T;
+
+    Optional(v: T) { has = true; value = v; }
+    ~Optional() { /* code */ }
+
+    is_some(): bool { return has; }
+
+    map<U>(f: (T) -> U): Vector<U> {
+        // code
+    }
+}
+
+// Generic function
+identity<T>(x: T): T {
+    return x;
+}
+
+// Call generic function
+n: i32 = identity<i32>(42);
+
+b: Optional<i32> = Optional<i32>(10);
+res: Vector<i64> = b.map<i64>((v: i32): i64 { return (i64)v; });
+
+// Type alias
+type IntVec = Vector<i32>;
+
+// Default type parameter for generics
+struct SmallVec<T = i32> {
+    data: T*;
+    len: i64;
+}
+
+```
+
+### Const
+
+`const` can be used for compile-time values. Or non-mutable values that are initialized at runtime, depending on the context.
+
+```pallas
+const BUFSZ: i64 = 16;
+const NAME: string = "Pallas";
+// Always allowed but not always compile-time constants (e.g., if BUFSZ was determined at runtime)
+arr: i32[BUFSZ];
+```
 ---
 
 ## Roadmap
@@ -229,7 +279,6 @@ main(): void {
 Goals:
 
 - Finish language spec
-- Complete Scanner(pretty much done)
 - Complete Parser
 - Complete Semantic
 - Integrate LLVM
@@ -248,7 +297,7 @@ Contributions are always welcome, check out [CONTRIBUTING.md](CONTRIBUTING.md) f
 
 ## License
 
-Pallas uses MIT licensed - see `LICENSE`.
+Pallas is MIT licensed - see `LICENSE`.
 
 ## Influences
 
