@@ -143,7 +143,9 @@ class Person {
 }
 ```
 
-### Control Flow
+---
+
+## Control Flow
 
 ```pallas
 if (x > 10) {
@@ -162,48 +164,37 @@ while (counter < n) {
 }
 ```
 
-### Pattern Matching
+### Range-based `for`
+
+Examples:
 
 ```pallas
-match (x) {
-    0 => { println("zero"); }
-    1 => { println("one"); }
-    42 => { println("rahh"); }
-    _ => { println("something else"); }
+// static array
+a: i32[4] = [1, 2, 3, 4];
+for (v : a) {
+    println("${v}");
+}
+
+// dynamic array
+v: Vec<i32> = Vec<i32>();
+v.push(10);
+v.push(20);
+for (x : v) {
+    println("${x}");
+}
+
+for (i: i64 = 0; i < a.size(); i = i + 1) {
+    v: i32 = a[i];
+    println("${v}");
 }
 ```
 
-### Pointers and Memory
-
-Manual memory management with `new` and `delete`.
-
-```pallas
-x: i32 = 5;
-p: i32* = &x;
-*p = 10;
-
-arr: i32* = new i32[10];
-arr[0] = 1;
-delete arr;
-```
-
-### Type Casting
-
-No implicit conversions, besides when using literals.
-
-```pallas
-x: i32 = 5; // OK
-y: f32 = 5; // OK
-z: f32 = (f32)x; // OK
-
-a: f32 = x; // ERROR
-```
 
 ---
 
 ## Examples
 
-### Function
+### Simple function
 
 ```pallas
 add(a: i32, b: i32): i32 {
@@ -211,7 +202,7 @@ add(a: i32, b: i32): i32 {
 }
 ```
 
-### Using a Class
+### Using a class
 
 ```pallas
 main(): void {
@@ -234,10 +225,6 @@ class Optional<T> {
     ~Optional() { /* code */ }
 
     is_some(): bool { return has; }
-
-    map<U>(f: (T) -> U): Vector<U> {
-        // code
-    }
 }
 
 // Generic function
@@ -254,12 +241,14 @@ res: Vector<i64> = b.map<i64>((v: i32): i64 { return (i64)v; });
 // Type alias
 type IntVec = Vector<i32>;
 
-// Default type parameter for generics
+// Default type param
 struct SmallVec<T = i32> {
     data: T*;
     len: i64;
 }
 
+// Use defaulted generic
+sv: SmallVec = SmallVec(); // SmallVec<i32>
 ```
 
 ### Const
@@ -269,7 +258,6 @@ struct SmallVec<T = i32> {
 ```pallas
 const BUFSZ: i64 = 16;
 const NAME: string = "Pallas";
-// Always allowed but not always compile-time constants (e.g., if BUFSZ was determined at runtime)
 arr: i32[BUFSZ];
 ```
 ---

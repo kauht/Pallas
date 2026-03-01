@@ -89,7 +89,8 @@ IF_STATEMENT       ::= "if" "(" EXPRESSION ")" STATEMENT [ "else" STATEMENT ] ;
 
 WHILE_STATEMENT    ::= "while" "(" EXPRESSION ")" STATEMENT ;
 
-FOR_STATEMENT      ::= "for" "(" ( DECLARATION | EXPRESSION )? ";" EXPRESSION? ";" EXPRESSION? ")" STATEMENT ;
+FOR_STATEMENT      ::= "for" "(" ( DECLARATION | EXPRESSION )? ";" EXPRESSION? ";" EXPRESSION? ")" STATEMENT
+                     | "for" "(" IDENTIFIER ":" EXPRESSION ")" STATEMENT ;
 
 MATCH_STATEMENT    ::= "match" "(" EXPRESSION ")" "{" { MATCH_ARM } "}" ;
 MATCH_ARM          ::= PATTERN "=>" BLOCK ;
@@ -166,6 +167,8 @@ BOOLEAN_LITERAL    ::= BOOLEAN_LITERAL ;
 
 CONST_EXPR         ::= LITERAL | IDENTIFIER | CONST_EXPR_BINOP ;
 CONST_EXPR_BINOP   ::= CONST_EXPR ( "+" | "-" | "*" | "/" | "%" ) CONST_EXPR ;
+
+RANGE_FOR_EXAMPLE  ::= "for" "(" IDENTIFIER ":" EXPRESSION ")" BLOCK ;
 
 IDENTIFIER         ::= /[a-zA-Z_][a-zA-Z0-9_]*/ ;
 NUMBER             ::= /[0-9]+/ ;
