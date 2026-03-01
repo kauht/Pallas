@@ -9,7 +9,7 @@ TEST_CASE("keywords are recognized and tokenized") {
     std::string code =
         "import if else for while do break continue return struct class public private "
         "new delete true false null const void match enum int float double char string bool type "
-        "i8 i16 i32 i64 i128 u8 u16 u32 u64 u128 f32 f64";
+        "f32 f64";
 
     Scanner scanner(code);
     auto tokens = scanner.get_tokens();
@@ -22,9 +22,7 @@ TEST_CASE("keywords are recognized and tokenized") {
         TokenType::TOKEN_FALSE, TokenType::TOKEN_NULL, TokenType::TOKEN_CONST, TokenType::TOKEN_VOID,
         TokenType::TOKEN_MATCH, TokenType::TOKEN_ENUM, TokenType::TOKEN_INT, TokenType::TOKEN_FLOAT,
         TokenType::TOKEN_DOUBLE, TokenType::TOKEN_CHAR, TokenType::TOKEN_STRING, TokenType::TOKEN_BOOL,
-        TokenType::TOKEN_TYPE, TokenType::TOKEN_I8, TokenType::TOKEN_I16, TokenType::TOKEN_I32, TokenType::TOKEN_I64,
-        TokenType::TOKEN_I128, TokenType::TOKEN_U8, TokenType::TOKEN_U16, TokenType::TOKEN_U32,
-        TokenType::TOKEN_U64, TokenType::TOKEN_U128, TokenType::TOKEN_F32, TokenType::TOKEN_F64,
+        TokenType::TOKEN_TYPE, TokenType::TOKEN_F32, TokenType::TOKEN_F64,
         TokenType::TOKEN_EOF
     };
 

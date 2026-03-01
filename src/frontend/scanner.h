@@ -133,11 +133,6 @@ class Scanner {
         {"int", TokenType::TOKEN_INT},         {"float", TokenType::TOKEN_FLOAT},
         {"double", TokenType::TOKEN_DOUBLE},   {"char", TokenType::TOKEN_CHAR},
         {"string", TokenType::TOKEN_STRING},   {"bool", TokenType::TOKEN_BOOL},
-        {"i8", TokenType::TOKEN_I8},           {"i16", TokenType::TOKEN_I16},
-        {"i32", TokenType::TOKEN_I32},         {"i64", TokenType::TOKEN_I64},
-        {"i128", TokenType::TOKEN_I128},       {"u8", TokenType::TOKEN_U8},
-        {"u16", TokenType::TOKEN_U16},         {"u32", TokenType::TOKEN_U32},
-        {"u64", TokenType::TOKEN_U64},         {"u128", TokenType::TOKEN_U128},
         {"f32", TokenType::TOKEN_F32},         {"f64", TokenType::TOKEN_F64},
     };
     Token next_token();
